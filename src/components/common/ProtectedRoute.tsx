@@ -1,0 +1,16 @@
+import { Navigate, Outlet } from "react-router-dom"
+import { useAuthStore } from "@/features/auth/store/useAuthStore"
+
+/**
+ * Bảo vệ các route yêu cầu đăng nhập.
+ * Nếu chưa có accessToken → redirect về /login
+ */
+export function ProtectedRoute() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <Outlet />
+}

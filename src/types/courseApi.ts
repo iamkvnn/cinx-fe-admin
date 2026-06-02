@@ -1,0 +1,406 @@
+export interface UpdateCourseRequest {
+  title?: string;
+  description?: string;
+  categoryId: string;
+  price?: number;
+  discountedPrice?: number;
+  isInSubscription?: boolean;
+  duration?: number;
+  hasCertificate?: boolean;
+  certificateTitle?: string;
+}
+
+export interface CategoryResponse {
+  id?: string;
+  name?: string;
+}
+
+export interface CourseImageResponse {
+  id?: string;
+  imageUrl?: string;
+}
+
+export interface CourseResponse {
+  id?: string;
+  title?: string;
+  description?: string;
+  category?: CategoryResponse;
+  instructor?: InstructorResponse;
+  images?: CourseImageResponse[];
+  price?: number;
+  discountedPrice?: number;
+  discountRate?: number;
+  rating?: number;
+  enrollmentCount?: number;
+  isInSubscription?: boolean;
+  duration?: number;
+  hasCertificate?: boolean;
+  certificateTitle?: string;
+  status?: "DRAFT" | "WAITING_APPROVAL" | "PUBLISHED" | "REJECTED" | "ARCHIVED";
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InstructorResponse {
+  id?: string;
+  name?: string;
+  email?: string;
+  gender?: "MALE" | "FEMALE";
+  avatarUrl?: string;
+}
+
+export interface ReorderLessonsRequest {
+  sections: SectionLessonsOrderRequest[];
+}
+
+export interface SectionLessonsOrderRequest {
+  sectionId: string;
+  lessonIds: string[];
+}
+
+export interface CourseCurriculumResponse {
+  courseId?: string;
+  sections?: CurriculumSectionResponse[];
+}
+
+export interface CurriculumSectionResponse {
+  id?: string;
+  title?: string;
+  description?: string;
+  duration?: number;
+  orderIndex?: number;
+  lessons?: LessonResponse[];
+}
+
+export interface LessonResponse {
+  id?: string;
+  title?: string;
+  duration?: number;
+  lessonType?: "VIDEO" | "ARTICLE" | "QUIZ" | "ASSIGNMENT";
+  orderIndex?: number;
+  isPreview?: boolean;
+  prerequisiteIds?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpdateSectionRequest {
+  title: string;
+  description?: string;
+  duration?: number;
+}
+
+export interface SectionResponse {
+  id?: string;
+  title?: string;
+  description?: string;
+  duration?: number;
+  orderIndex?: number;
+}
+
+export interface UpdateLessonRequest {
+  title: string;
+  duration?: number;
+  isPreview?: boolean;
+  prerequisiteIds?: string[];
+}
+
+export interface UpdateVideoLessonRequest {
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
+  duration?: number;
+}
+
+export interface UpdateSubtitleTrackRequest {
+  displayName?: string;
+  fileKey?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  isDefault?: boolean;
+}
+
+export interface SubtitleTrackResponse {
+  id?: string;
+  languageCode?: string;
+  displayName?: string;
+  fileUrl?: string;
+  fileKey?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  format?: "VTT" | "SRT";
+  source?: "MANUAL" | "AI_GENERATED" | "AI_EDITED";
+  status?: "READY" | "PROCESSING" | "FAILED";
+  isDefault?: boolean;
+}
+
+export interface UpdateVideoOptionRequest {
+  id?: string;
+  optionText: string;
+  isCorrect?: boolean;
+}
+
+export interface UpdateVideoQuestionRequest {
+  questionText: string;
+  timestampSeconds?: number;
+  options?: UpdateVideoOptionRequest[];
+}
+
+export interface VideoOptionResponse {
+  id?: string;
+  optionText?: string;
+  isCorrect?: boolean;
+}
+
+export interface VideoQuestionResponse {
+  id?: string;
+  questionText?: string;
+  questionType?: "SINGLE_CHOICE" | "MULTI_CHOICE";
+  timestampSeconds?: number;
+  options?: VideoOptionResponse[];
+}
+
+export interface UpdateQuizLessonRequest {
+  numberOfQuestionPerQuizSession?: number;
+  maxAttempt?: number;
+  duration?: number;
+  isReviewAllowed?: boolean;
+  isShowAnswersOnReview?: boolean;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  scoringMode?: "HIGHEST" | "LATEST" | "AVERAGE" | "FIRST";
+}
+
+export interface UpdateQuizOptionRequest {
+  id?: string;
+  optionText: string;
+  isCorrect: boolean;
+  optionOrder?: number;
+  matchText?: string;
+}
+
+export interface UpdateQuizQuestionRequest {
+  questionText: string;
+  scoringMethod: "ALL_OR_NOTHING" | "PARTIAL_CREDIT" | "NEGATIVE_MARK";
+  options?: UpdateQuizOptionRequest[];
+}
+
+export interface QuizOptionResponse {
+  id?: string;
+  optionText?: string;
+  isCorrect?: boolean;
+  optionOrder?: number;
+  matchText?: string;
+}
+
+export interface QuizQuestionResponse {
+  id?: string;
+  questionText?: string;
+  questionType?: "SINGLE_CHOICE" | "MULTI_CHOICE" | "SHORT_TEXT" | "ORDERING" | "MATCHING" | "ESSAY";
+  scoringMethod?: "ALL_OR_NOTHING" | "PARTIAL_CREDIT" | "NEGATIVE_MARK";
+  needSync?: boolean;
+  options?: QuizOptionResponse[];
+}
+
+export interface AttachmentDto {
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+}
+
+export interface UpdateAssignmentLessonRequest {
+  description?: string;
+  attachments?: AttachmentDto[];
+}
+
+export interface UpdateArticleLessonRequest {
+  content: string;
+}
+
+export interface UpdateCourseImageRequest {
+  fileKey: string;
+}
+
+export interface UpdateCategoryRequest {
+  name: string;
+}
+
+export interface CreateCourseRequest {
+  title: string;
+  description: string;
+  categoryId: string;
+  price: number;
+  discountedPrice?: number;
+  isInSubscription: boolean;
+  duration?: number;
+  hasCertificate: boolean;
+  certificateTitle?: string;
+}
+
+export interface CreateSectionRequest {
+  title: string;
+  description?: string;
+  duration?: number;
+}
+
+export interface CreateLessonRequest {
+  title: string;
+  duration?: number;
+  lessonType: "VIDEO" | "ARTICLE" | "QUIZ" | "ASSIGNMENT";
+  isPreview: boolean;
+  prerequisiteIds?: string[];
+}
+
+export interface CreateVideoLessonRequest {
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  duration?: number;
+}
+
+export interface CreateSubtitleTrackRequest {
+  languageCode: string;
+  displayName: string;
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  isDefault?: boolean;
+}
+
+export interface CreateVideoOptionRequest {
+  optionText: string;
+  isCorrect: boolean;
+}
+
+export interface CreateVideoQuestionRequest {
+  questionText: string;
+  questionType: "SINGLE_CHOICE" | "MULTI_CHOICE";
+  timestampSeconds: number;
+  options: CreateVideoOptionRequest[];
+}
+
+export interface CreateQuizLessonRequest {
+  numberOfQuestionPerQuizSession: number;
+  maxAttempt?: number;
+  duration?: number;
+  isReviewAllowed: boolean;
+  isShowAnswersOnReview: boolean;
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
+  scoringMode: "HIGHEST" | "LATEST" | "AVERAGE" | "FIRST";
+  questions: CreateQuizQuestionRequest[];
+}
+
+export interface CreateQuizOptionRequest {
+  optionText: string;
+  isCorrect: boolean;
+  optionOrder?: number;
+  matchText?: string;
+}
+
+export interface CreateQuizQuestionRequest {
+  questionText: string;
+  questionType: "SINGLE_CHOICE" | "MULTI_CHOICE" | "SHORT_TEXT" | "ORDERING" | "MATCHING" | "ESSAY";
+  scoringMethod: "ALL_OR_NOTHING" | "PARTIAL_CREDIT" | "NEGATIVE_MARK";
+  options: CreateQuizOptionRequest[];
+}
+
+export interface SyncQuizRequest {
+  triggerRegrade: boolean;
+  changeReason: string;
+}
+
+export interface CreateAssignmentLessonRequest {
+  description: string;
+  attachments?: AttachmentDto[];
+}
+
+export interface CreateArticleLessonRequest {
+  content: string;
+}
+
+export interface CreateCourseImageRequest {
+  images: ImageDto[];
+}
+
+export interface ImageDto {
+  fileKey: string;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+}
+
+export interface RejectCourseRequest {
+  reason: string;
+}
+
+export interface RejectCourseResponse {
+  courseId?: string;
+  reason?: string;
+}
+
+export interface VideoLessonResponse {
+  videoUrl?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  duration?: number;
+  status?: string;
+  hasQuestions?: boolean;
+  questionCount?: number;
+  hasSubtitles?: boolean;
+  subtitleCount?: number;
+  subtitles?: SubtitleTrackResponse[];
+}
+
+export interface QuizLessonResponse {
+  lessonId?: string;
+  numberOfQuestionPerQuizSession?: number;
+  maxAttempt?: number;
+  duration?: number;
+  isReviewAllowed?: boolean;
+  isShowAnswersOnReview?: boolean;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  scoringMode?: "HIGHEST" | "LATEST" | "AVERAGE" | "FIRST";
+  hasPendingSync?: boolean;
+  questions?: QuizQuestionResponse[];
+}
+
+export interface AssignmentAttachmentResponse {
+  id?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  attachmentUrl?: string;
+}
+
+export interface AssignmentLessonResponse {
+  description?: string;
+  attachments?: AssignmentAttachmentResponse[];
+}
+
+export interface ArticleLessonResponse {
+  content?: string;
+}
+
+export interface InstructorCourseSummaryResponse {
+  courseCount?: number;
+  publishedCourseCount?: number;
+  averageRating?: number;
+}
+
+export interface CourseChangeResponse {
+  courseId?: string;
+  itemId?: string;
+  itemType?: string;
+  oldValue?: string;
+  newValue?: string;
+}
