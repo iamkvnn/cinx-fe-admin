@@ -12,7 +12,7 @@ import type { Column } from "@/components/shared/data-table"
 import { useTableState } from "@/hooks/useTableState"
 import { AdminCourseService, CategoryService, UserService } from "@/services"
 import type { CourseResponse, PaginatedApiResponse } from "@/types"
-import { StatusBadge } from "../components/StatusBadge"
+import { StatusBadge, getCourseDisplayStatus } from "../components/StatusBadge"
 
 const formatPrice = (p: number | undefined) =>
   p === undefined ? "0 ₫" : new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(p)
@@ -35,7 +35,7 @@ const COLUMNS: Column<CourseResponse>[] = [
   },
   { key: "price", title: "Giá bán", sortable: true, render: (c) => formatPrice(c.price as any) },
   { key: "updatedAt", title: "Cập nhật", hideable: true, render: (c) => formatDate(c.updatedAt || c.createdAt) },
-  { key: "status", title: "Trạng thái", render: (c) => <StatusBadge status={(c as any).status} /> },
+  { key: "status", title: "Trạng thái", render: (c) => <StatusBadge status={getCourseDisplayStatus(c)} /> },
   { key: "actions", title: "Hành động", className: "text-right", render: () => null },
 ]
 
@@ -90,22 +90,25 @@ export function CoursesPage() {
     queryFn: () => UserService.getAllUsers({ role: "INSTRUCTOR", size: 100 }),
   })
   const instructors = instructorsData?.data || []
-
   const { data, isLoading } = useQuery({
     queryKey: [
       "courses", page, pageSize, debouncedSearch, statusFilter,
       categoryFilter, instructorFilter, ratingFilter, debouncedPriceFrom, debouncedPriceTo
     ],
-    queryFn: () => AdminCourseService.getAllCourses_1({
-      page, size: pageSize,
-      query: debouncedSearch || undefined,
-      status: statusFilter === "ALL" ? undefined : (statusFilter as any),
-      categoryId: categoryFilter === "ALL" ? undefined : categoryFilter,
-      instructorId: instructorFilter === "ALL" ? undefined : instructorFilter,
-      rating: ratingFilter === "ALL" ? undefined : Number(ratingFilter),
-      priceFrom: debouncedPriceFrom ? Number(debouncedPriceFrom) : undefined,
-      priceTo: debouncedPriceTo ? Number(debouncedPriceTo) : undefined,
-    }),
+    queryFn: () => {
+      const isPublishStatus = ["WAITING_APPROVAL", "REJECTED"].includes(statusFilter)
+      return AdminCourseService.getAllCourses_1({
+        page, size: pageSize,
+        query: debouncedSearch || undefined,
+        status: (statusFilter === "ALL" || isPublishStatus) ? undefined : (statusFilter as any),
+        publishStatus: isPublishStatus ? (statusFilter as any) : undefined,
+        categoryId: categoryFilter === "ALL" ? undefined : categoryFilter,
+        instructorId: instructorFilter === "ALL" ? undefined : instructorFilter,
+        rating: ratingFilter === "ALL" ? undefined : Number(ratingFilter),
+        priceFrom: debouncedPriceFrom ? Number(debouncedPriceFrom) : undefined,
+        priceTo: debouncedPriceTo ? Number(debouncedPriceTo) : undefined,
+      })
+    },
   })
 
   const paginatedData: PaginatedApiResponse<CourseResponse> = data || {

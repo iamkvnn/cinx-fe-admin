@@ -2,9 +2,10 @@
 import * as React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { 
-  ArrowLeft, PlayCircle, Clock, Star, 
-  Users, GitCompare, PlusCircle, MinusCircle, Edit, ArrowRight 
+import {
+  ArrowLeft, PlayCircle, Clock, Star,
+  Users, GitCompare, PlusCircle, MinusCircle, Edit, ArrowRight,
+  FileText, HelpCircle, ClipboardList
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -15,8 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { CourseService, AdminCourseService } from "@/services"
+import { AdminCourseService } from "@/services"
 import { CourseApprovalActions } from "../components/CourseApprovalActions"
+import { StatusBadge, getCourseDisplayStatus } from "../components/StatusBadge"
 
 // Helper to get unique IDs from two arrays of objects
 const getUniqueIds = (arr1?: any[], arr2?: any[]) => {
@@ -35,7 +37,7 @@ export function CourseDetailPage() {
   // 1. DRAFT COURSE INFO (Current/Latest)
   const { data: draftCourseData, isLoading: isLoadingDraft } = useQuery({
     queryKey: ['course-admin', id],
-    queryFn: () => AdminCourseService.getCourseById_2({ id: id as string }),
+    queryFn: () => AdminCourseService.getCourseDraft_1({ id: id as string }),
     enabled: !!id
   })
 
@@ -44,7 +46,7 @@ export function CourseDetailPage() {
     queryKey: ['course-published', id],
     queryFn: async () => {
       try {
-        return await CourseService.getCourseById({ id: id as string })
+        return await AdminCourseService.getCourseById_2({ id: id as string })
       } catch (e: any) {
         if (e?.response?.status === 404) return null
         throw e
@@ -59,7 +61,7 @@ export function CourseDetailPage() {
     queryKey: ['course-curriculum-draft', id],
     queryFn: async () => {
       try {
-        const res = await CourseService.getDraftCurriculum({ id: id as string })
+        const res = await AdminCourseService.getDraftCurriculum_1({ id: id as string })
         return res
       } catch (e: any) {
         if (e?.response?.status === 404) return { data: { sections: [] } }
@@ -74,7 +76,7 @@ export function CourseDetailPage() {
     queryKey: ['course-curriculum-published', id],
     queryFn: async () => {
       try {
-        return await CourseService.getPublishedCurriculum({ id: id as string })
+        return await AdminCourseService.getCourseCurriculum({ id: id as string })
       } catch (e: any) {
         if (e?.response?.status === 404) return null
         throw e
@@ -102,7 +104,7 @@ export function CourseDetailPage() {
   })
 
   if (isLoadingDraft) return <div className="p-8 text-center">Đang tải...</div>
-  
+
   // Base data is the Draft
   const course = draftCourseData?.data
   if (!course) return <div className="p-8 text-center">Không tìm thấy khóa học</div>
@@ -113,7 +115,7 @@ export function CourseDetailPage() {
 
   // Derived state to know if this is an update vs new
   // If the status is WAITING_APPROVAL and we DO have a published version -> it's an Update!
-  const isUpdate = course.status === 'WAITING_APPROVAL' && publishedCourse !== null
+  const isUpdate = course.publishStatus === 'WAITING_APPROVAL' && publishedCourse !== null
 
   const formatPrice = (price: number | undefined) => {
     if (price === undefined) return '0 ₫'
@@ -127,6 +129,16 @@ export function CourseDetailPage() {
     if (hours > 0 && mins > 0) return `${hours} giờ ${mins} phút`
     if (hours > 0) return `${hours} giờ`
     return `${mins} phút`
+  }
+
+  const getLessonIcon = (type?: string) => {
+    switch (type) {
+      case "VIDEO": return <PlayCircle className="h-4 w-4 shrink-0 text-primary" />;
+      case "ARTICLE": return <FileText className="h-4 w-4 shrink-0 text-primary" />;
+      case "QUIZ": return <HelpCircle className="h-4 w-4 shrink-0 text-primary" />;
+      case "ASSIGNMENT": return <ClipboardList className="h-4 w-4 shrink-0 text-primary" />;
+      default: return <PlayCircle className="h-4 w-4 shrink-0 text-primary" />;
+    }
   }
 
   const renderLessonDiff = (oldL: any, newL: any) => {
@@ -159,7 +171,7 @@ export function CourseDetailPage() {
       return (
         <div key={newL.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-md bg-muted/20 border border-transparent mt-2">
           <span className="text-muted-foreground text-sm flex items-center gap-2">
-            <PlayCircle className="w-4 h-4 shrink-0" /> {newL.title}
+            {getLessonIcon(newL.lessonType)} {newL.title}
           </span>
           <span className="text-muted-foreground text-xs">{formatDuration(newL.duration)}</span>
         </div>
@@ -229,12 +241,12 @@ export function CourseDetailPage() {
     const titleChanged = (oldSec.title || '').trim() !== (newSec.title || '').trim();
     const descChanged = (oldSec.description || '').trim() !== (newSec.description || '').trim();
     const lessonIds = getUniqueIds(oldSec.lessons, newSec.lessons);
-    
+
     const hasLessonChanges = lessonIds.some(lId => {
       const oL = oldSec.lessons?.find((l: any) => l.id === lId);
       const nL = newSec.lessons?.find((l: any) => l.id === lId);
-      return !oL || !nL || 
-        (oL.title || '').trim() !== (nL.title || '').trim() || 
+      return !oL || !nL ||
+        (oL.title || '').trim() !== (nL.title || '').trim() ||
         Number(oL.duration ?? 0) !== Number(nL.duration ?? 0);
     });
 
@@ -287,10 +299,9 @@ export function CourseDetailPage() {
           <CardHeader>
             <div className="flex justify-between items-start gap-4">
               <div>
-                <Badge variant={data.status === 'WAITING_APPROVAL' ? 'default' : data.status === 'PUBLISHED' ? 'default' : 'secondary'} 
-                  className={data.status === 'WAITING_APPROVAL' ? 'bg-yellow-500 hover:bg-yellow-600 mb-2' : data.status === 'PUBLISHED' ? 'bg-green-500 hover:bg-green-600 mb-2' : 'mb-2'}>
-                  {data.status === 'WAITING_APPROVAL' ? "Đang chờ duyệt" : data.status}
-                </Badge>
+                <div className="mb-2">
+                  <StatusBadge status={getCourseDisplayStatus(data)} />
+                </div>
                 <CardTitle className="text-2xl">{data.title}</CardTitle>
               </div>
             </div>
@@ -298,8 +309,8 @@ export function CourseDetailPage() {
           <CardContent className="space-y-6">
             {(data.images && data.images.length > 0) && (
               <div className="aspect-video w-full rounded-md overflow-hidden bg-muted border">
-                <img 
-                  src={data.images[0]?.imageUrl} 
+                <img
+                  src={data.images[0]?.imageUrl}
                   alt={data.title}
                   className="w-full h-full object-cover"
                 />
@@ -339,7 +350,7 @@ export function CourseDetailPage() {
                       {section.lessons?.map((lesson: any) => (
                         <li key={lesson.id} className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50 text-sm border bg-background">
                           <div className="flex items-center gap-3">
-                            <PlayCircle className="h-4 w-4 text-primary" />
+                            {getLessonIcon(lesson.lessonType)}
                             <span>{lesson.title}</span>
                             {lesson.isPreview && (
                               <Badge variant="secondary" className="text-[10px] h-5 px-1.5 ml-2">Preview</Badge>
@@ -431,13 +442,17 @@ export function CourseDetailPage() {
 
   const isTitleChanged = publishedCourse?.title !== course.title
   const isPriceChanged = Number(publishedCourse?.price ?? 0) !== Number(course.price ?? 0)
-  
+
   const oldDiscountedPrice = publishedCourse?.discountedPrice !== undefined ? publishedCourse.discountedPrice : (publishedCourse?.price || 0)
   const newDiscountedPrice = course.discountedPrice !== undefined ? course.discountedPrice : (course.price || 0)
   const isDiscountedPriceChanged = Number(oldDiscountedPrice) !== Number(newDiscountedPrice)
-  
+
   const isDurationChanged = Number(publishedCourse?.duration ?? 0) !== Number(course.duration ?? 0)
   const isDescriptionChanged = (publishedCourse?.description || '') !== (course.description || '')
+
+  const isCategoryChanged = publishedCourse?.category?.id !== course.category?.id
+  const isCertificateChanged = publishedCourse?.hasCertificate !== course.hasCertificate || publishedCourse?.certificateTitle !== course.certificateTitle
+  const isSubscriptionChanged = publishedCourse?.isInSubscription !== course.isInSubscription
 
   return (
     <div className="space-y-6 pb-12">
@@ -455,8 +470,8 @@ export function CourseDetailPage() {
             </div>
           </div>
         </div>
-        
-        {course.status === 'WAITING_APPROVAL' && (
+
+        {course.publishStatus === 'WAITING_APPROVAL' && (
           <div className="flex gap-2">
             <CourseApprovalActions
               courseId={id as string}
@@ -482,11 +497,11 @@ export function CourseDetailPage() {
               </span>
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="current" className="mt-0 outline-none">
             {renderCourseInfo(publishedCourse, publishedCurriculum)}
           </TabsContent>
-          
+
           <TabsContent value="update" className="mt-0 outline-none">
             <div className="flex justify-end mb-4">
               <div className="flex items-center space-x-3 bg-card px-4 py-2 rounded-md border shadow-sm">
@@ -494,10 +509,10 @@ export function CourseDetailPage() {
                   <GitCompare className="w-4 h-4 inline-block mr-2" />
                   So sánh thay đổi
                 </Label>
-                <Switch 
-                  id="compare-mode" 
-                  checked={showDiff} 
-                  onCheckedChange={setShowDiff} 
+                <Switch
+                  id="compare-mode"
+                  checked={showDiff}
+                  onCheckedChange={setShowDiff}
                 />
               </div>
             </div>
@@ -540,9 +555,32 @@ export function CourseDetailPage() {
                           <TableCell className={`align-top py-4 ${isDiscountedPriceChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{formatPrice(course.discountedPrice !== undefined ? course.discountedPrice : course.price)}</TableCell>
                         </TableRow>
                         <TableRow>
+                          <TableCell className="font-medium align-top py-4">Danh mục</TableCell>
+                          <TableCell className={`align-top py-4 ${isCategoryChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{publishedCourse?.category?.name || "N/A"}</TableCell>
+                          <TableCell className={`align-top py-4 ${isCategoryChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{course.category?.name || "N/A"}</TableCell>
+                        </TableRow>
+                        <TableRow>
                           <TableCell className="font-medium align-top py-4">Tổng thời lượng</TableCell>
                           <TableCell className={`align-top py-4 ${isDurationChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{formatDuration(publishedCourse?.duration || 0)}</TableCell>
                           <TableCell className={`align-top py-4 ${isDurationChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{formatDuration(course.duration)}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium align-top py-4">Chứng chỉ</TableCell>
+                          <TableCell className={`align-top py-4 ${isCertificateChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>
+                            {publishedCourse?.hasCertificate ? `Có (${publishedCourse.certificateTitle || "Chưa đặt tên"})` : "Không"}
+                          </TableCell>
+                          <TableCell className={`align-top py-4 ${isCertificateChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>
+                            {course.hasCertificate ? `Có (${course.certificateTitle || "Chưa đặt tên"})` : "Không"}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium align-top py-4">Gói Subscription</TableCell>
+                          <TableCell className={`align-top py-4 ${isSubscriptionChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>
+                            {publishedCourse?.isInSubscription ? "Có áp dụng" : "Không áp dụng"}
+                          </TableCell>
+                          <TableCell className={`align-top py-4 ${isSubscriptionChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>
+                            {course.isInSubscription ? "Có áp dụng" : "Không áp dụng"}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium align-top py-4">Mô tả</TableCell>

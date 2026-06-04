@@ -13,7 +13,9 @@ import {
   Calendar, 
   KeyRound,
   Eye,
-  EyeOff
+  EyeOff,
+  Camera,
+  Loader2
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -22,7 +24,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { UserService, AuthService } from "@/services"
+import { UserService, AuthService, PresignedUrlService } from "@/services"
 import { Skeleton } from "@/components/ui/skeleton"
 
 // Zod schemas for validation
@@ -54,6 +56,74 @@ export function ProfilePage() {
   const [showOldPass, setShowOldPass] = React.useState(false)
   const [showNewPass, setShowNewPass] = React.useState(false)
   const [showConfirmPass, setShowConfirmPass] = React.useState(false)
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [uploadingAvatar, setUploadingAvatar] = React.useState(false)
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingAvatar(true)
+      setProfileError(null)
+      setProfileSuccess(null)
+
+      // 1. Get presigned URL
+      const presignedRes = await PresignedUrlService.getPresignedUrl({
+        fileName: file.name,
+        contentType: file.type
+      })
+
+      if (!presignedRes.success || !presignedRes.data?.presignedUrl || !presignedRes.data?.fileKey) {
+        throw new Error(presignedRes.message || "Không thể lấy link tải lên (presigned URL)")
+      }
+
+      const { presignedUrl, fileKey } = presignedRes.data
+
+      // 2. Upload file to presigned URL using PUT method
+      // Set headers: x-amz-acl: public-read, Content-Type: file.type
+      const uploadRes = await fetch(presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+          "x-amz-acl": "public-read"
+        }
+      })
+      if (!uploadRes.ok) {
+        throw new Error(`Tải tệp lên thất bại: ${uploadRes.status} ${uploadRes.statusText}`)
+      }
+
+      // 3. Update user profile with the uploaded fileKey
+      if (!currentUser?.userId) throw new Error("Không tìm thấy thông tin định danh người dùng")
+
+      const updateRes = await UserService.updateUser({
+        id: currentUser.userId,
+        body: {
+          name: currentUser.name || "",
+          gender: currentUser.gender,
+          phoneNumber: currentUser.phoneNumber,
+          avatarFileKey: fileKey
+        }
+      })
+
+      if (updateRes.success) {
+        setProfileSuccess("Cập nhật ảnh đại diện thành công!")
+        queryClient.invalidateQueries({ queryKey: ["current-user"] })
+      } else {
+        setProfileError(updateRes.message || "Cập nhật ảnh đại diện thất bại.")
+      }
+    } catch (err: any) {
+      console.error(err)
+      setProfileError(err?.response?.data?.message || err?.message || "Đã xảy ra lỗi khi tải lên ảnh đại diện.")
+    } finally {
+      setUploadingAvatar(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
 
   // 1. Fetch current user profile
   const { data: currentUserData, isLoading } = useQuery({
@@ -191,13 +261,37 @@ export function ProfilePage() {
           <div className="h-28 bg-gradient-to-r from-primary/30 to-indigo-500/20 relative" />
           <CardContent className="pt-0 px-6 pb-6 relative text-center flex flex-col items-center">
             {/* Avatar block with border & hover zoom */}
-            <div className="-mt-14 h-24 w-24 rounded-full overflow-hidden border-4 border-card bg-muted flex items-center justify-center text-primary font-bold text-3xl shadow-lg transition-transform duration-300 hover:scale-105">
+            <div 
+              onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+              className="relative group -mt-14 h-24 w-24 rounded-full overflow-hidden border-4 border-card bg-muted flex items-center justify-center text-primary font-bold text-3xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer"
+            >
               {currentUser.avatarUrl ? (
                 <img src={currentUser.avatarUrl} alt={currentUser.name} className="h-full w-full object-cover" />
               ) : (
                 currentUser.name?.charAt(0).toUpperCase() || "A"
               )}
+
+              {/* Upload overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-xs transition-opacity duration-300 select-none">
+                {uploadingAvatar ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5 mb-1" />
+                    <span>Thay đổi</span>
+                  </>
+                )}
+              </div>
             </div>
+
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleAvatarChange} 
+              disabled={uploadingAvatar}
+            />
 
             <div className="mt-4">
               <h3 className="text-xl font-bold tracking-tight">{currentUser.name}</h3>

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
 import { UserService, AdminInstructorService, StatisticsService, AdminCourseService } from "@/services"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StatusBadge, getCourseDisplayStatus } from "@/features/courses/components/StatusBadge"
 
 export function InstructorDetailPage() {
   const { id } = useParams()
@@ -306,10 +307,7 @@ export function InstructorDetailPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={course.status === 'PUBLISHED' ? 'default' : 'secondary'}
-                              className={course.status === 'PUBLISHED' ? 'bg-green-500 hover:bg-green-600' : course.status === 'WAITING_APPROVAL' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}>
-                              {course.status === 'PUBLISHED' ? 'Đã xuất bản' : course.status === 'WAITING_APPROVAL' ? 'Chờ duyệt' : course.status}
-                            </Badge>
+                            <StatusBadge status={getCourseDisplayStatus(course)} />
                           </TableCell>
                           <TableCell className="text-right">{(course.enrollmentCount ?? 0).toLocaleString('vi-VN')}</TableCell>
                           <TableCell className="text-right">

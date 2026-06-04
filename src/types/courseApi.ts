@@ -43,7 +43,8 @@ export interface CourseResponse {
   duration?: number;
   hasCertificate?: boolean;
   certificateTitle?: string;
-  status?: "DRAFT" | "WAITING_APPROVAL" | "PUBLISHED" | "REJECTED" | "ARCHIVED";
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  publishStatus?: "WAITING_APPROVAL" | "PUBLISHED" | "REJECTED";
   createdAt?: string;
   updatedAt?: string;
 }
@@ -54,41 +55,6 @@ export interface InstructorResponse {
   email?: string;
   gender?: "MALE" | "FEMALE";
   avatarUrl?: string;
-}
-
-export interface ReorderLessonsRequest {
-  sections: SectionLessonsOrderRequest[];
-}
-
-export interface SectionLessonsOrderRequest {
-  sectionId: string;
-  lessonIds: string[];
-}
-
-export interface CourseCurriculumResponse {
-  courseId?: string;
-  sections?: CurriculumSectionResponse[];
-}
-
-export interface CurriculumSectionResponse {
-  id?: string;
-  title?: string;
-  description?: string;
-  duration?: number;
-  orderIndex?: number;
-  lessons?: LessonResponse[];
-}
-
-export interface LessonResponse {
-  id?: string;
-  title?: string;
-  duration?: number;
-  lessonType?: "VIDEO" | "ARTICLE" | "QUIZ" | "ASSIGNMENT";
-  orderIndex?: number;
-  isPreview?: boolean;
-  prerequisiteIds?: string[];
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface UpdateSectionRequest {
@@ -110,6 +76,18 @@ export interface UpdateLessonRequest {
   duration?: number;
   isPreview?: boolean;
   prerequisiteIds?: string[];
+}
+
+export interface LessonResponse {
+  id?: string;
+  title?: string;
+  duration?: number;
+  lessonType?: "VIDEO" | "ARTICLE" | "QUIZ" | "ASSIGNMENT";
+  orderIndex?: number;
+  isPreview?: boolean;
+  prerequisiteIds?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UpdateVideoLessonRequest {
@@ -348,9 +326,45 @@ export interface RejectCourseRequest {
   reason: string;
 }
 
+export interface MoveSectionRequest {
+  previousSectionId?: string;
+  nextSectionId?: string;
+}
+
+export interface SectionPositionResponse {
+  sectionId?: string;
+  orderIndex?: number;
+}
+
+export interface MoveLessonRequest {
+  targetSectionId: string;
+  previousLessonId?: string;
+  nextLessonId?: string;
+}
+
+export interface LessonPositionResponse {
+  lessonId?: string;
+  sectionId?: string;
+  orderIndex?: number;
+}
+
 export interface RejectCourseResponse {
   courseId?: string;
   reason?: string;
+}
+
+export interface CourseCurriculumResponse {
+  courseId?: string;
+  sections?: CurriculumSectionResponse[];
+}
+
+export interface CurriculumSectionResponse {
+  id?: string;
+  title?: string;
+  description?: string;
+  duration?: number;
+  orderIndex?: number;
+  lessons?: LessonResponse[];
 }
 
 export interface VideoLessonResponse {
@@ -416,14 +430,6 @@ export interface InstructorCourseSummaryResponse {
   courseCount?: number;
   publishedCourseCount?: number;
   averageRating?: number;
-}
-
-export interface CourseChangeResponse {
-  courseId?: string;
-  itemId?: string;
-  itemType?: string;
-  oldValue?: string;
-  newValue?: string;
 }
 
 export interface AdminCourseStatisticsOverviewResponse {

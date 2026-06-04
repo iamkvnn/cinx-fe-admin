@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { ProtectedRoute } from '@/components/common/ProtectedRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { CoursesPage } from '@/features/courses/pages/CoursesPage'
 import { CourseDetailPage } from '@/features/courses/pages/CourseDetailPage'
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
   },
 
   // ─── Protected routes (require auth) ─────────────────────────────────────

@@ -9,11 +9,12 @@ import { api } from '@/lib/axios';
 import type {
   ApiResponse,
   PaginatedApiResponse,
+} from '@/types';
+import type {
   AdminCourseStatisticsOverviewResponse,
   ArticleLessonResponse,
   AssignmentLessonResponse,
   CategoryResponse,
-  CourseChangeResponse,
   CourseCurriculumResponse,
   CourseResponse,
   CreateArticleLessonRequest,
@@ -30,12 +31,15 @@ import type {
   CreateVideoQuestionRequest,
   InstructorCourseStatisticsOverviewResponse,
   InstructorCourseSummaryResponse,
+  LessonPositionResponse,
   LessonResponse,
+  MoveLessonRequest,
+  MoveSectionRequest,
   QuizLessonResponse,
   QuizQuestionResponse,
   RejectCourseRequest,
   RejectCourseResponse,
-  ReorderLessonsRequest,
+  SectionPositionResponse,
   SectionResponse,
   SubtitleTrackResponse,
   SyncQuizRequest,
@@ -70,12 +74,6 @@ export const CourseService = {
     return data;
   },
 
-  /** Reorder editable course curriculum */
-  async reorderCurriculum({ id, body }: { id: string; body: ReorderLessonsRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseCurriculumResponse>> {
-    const { data } = await api.put(`/api/v1/courses/${id}/curriculum/reorder`, body, config);
-    return data;
-  },
-
   async getAllCourses({ page, size, query, sort, rating, priceFrom, priceTo, categoryId, instructorId }: { page?: number; size?: number; query?: string; sort?: string; rating?: number; priceFrom?: number; priceTo?: number; categoryId?: string; instructorId?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<CourseResponse>> {
     const { data } = await api.get('/api/v1/courses', { params: { page, size, query, sort, rating, priceFrom, priceTo, categoryId, instructorId }, ...config });
     return data;
@@ -86,14 +84,62 @@ export const CourseService = {
     return data;
   },
 
+  /** Unarchive course */
+  async unarchiveCourse({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
+    const { data } = await api.post(`/api/v1/courses/${id}/unarchive`, undefined, config);
+    return data;
+  },
+
   /** Submit course for approval */
   async submitCourse({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
     const { data } = await api.post(`/api/v1/courses/${id}/submit`, undefined, config);
     return data;
   },
 
+  /** Archive course */
+  async archiveCourse({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
+    const { data } = await api.post(`/api/v1/courses/${id}/archive`, undefined, config);
+    return data;
+  },
+
+  /** Move editable course section */
+  async moveSection({ id, sectionId, body }: { id: string; sectionId: string; body: MoveSectionRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<SectionPositionResponse>> {
+    const { data } = await api.patch(`/api/v1/courses/${id}/curriculum/sections/${sectionId}/position`, body, config);
+    return data;
+  },
+
+  /** Move editable course lesson */
+  async moveLesson({ id, lessonId, body }: { id: string; lessonId: string; body: MoveLessonRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<LessonPositionResponse>> {
+    const { data } = await api.patch(`/api/v1/courses/${id}/curriculum/lessons/${lessonId}/position`, body, config);
+    return data;
+  },
+
   async getRejectReason({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<RejectCourseResponse>> {
     const { data } = await api.get(`/api/v1/courses/${id}/reject-reason`, config);
+    return data;
+  },
+
+  /** Get owned published course snapshot */
+  async getPublishedSnapshot({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
+    const { data } = await api.get(`/api/v1/courses/${id}/published`, config);
+    return data;
+  },
+
+  /** Get owned published course curriculum snapshot */
+  async getPublishedSnapshotCurriculum({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseCurriculumResponse>> {
+    const { data } = await api.get(`/api/v1/courses/${id}/published/curriculum`, config);
+    return data;
+  },
+
+  /** Get enrolled course */
+  async getEnrolledCourseById({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
+    const { data } = await api.get(`/api/v1/courses/${id}/enrolled`, config);
+    return data;
+  },
+
+  /** Get enrolled course curriculum */
+  async getEnrolledCurriculum({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseCurriculumResponse>> {
+    const { data } = await api.get(`/api/v1/courses/${id}/enrolled/curriculum`, config);
     return data;
   },
 
@@ -115,8 +161,8 @@ export const CourseService = {
   },
 
   /** Get my courses */
-  async getMyCourses({ page, size, query, sort, rating, priceFrom, priceTo, status, categoryId }: { page?: number; size?: number; query?: string; sort?: string; rating?: number; priceFrom?: number; priceTo?: number; status?: string; categoryId?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<CourseResponse>> {
-    const { data } = await api.get('/api/v1/courses/mine', { params: { page, size, query, sort, rating, priceFrom, priceTo, status, categoryId }, ...config });
+  async getMyCourses({ page, size, query, sort, rating, priceFrom, priceTo, status, publishStatus, categoryId }: { page?: number; size?: number; query?: string; sort?: string; rating?: number; priceFrom?: number; priceTo?: number; status?: string; publishStatus?: string; categoryId?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<CourseResponse>> {
+    const { data } = await api.get('/api/v1/courses/mine', { params: { page, size, query, sort, rating, priceFrom, priceTo, status, publishStatus, categoryId }, ...config });
     return data;
   },
 
@@ -380,8 +426,13 @@ export const AdminCourseService = {
     return data;
   },
 
-  async getAllCourses_1({ page, size, query, sort, rating, priceFrom, priceTo, status, categoryId, instructorId }: { page?: number; size?: number; query?: string; sort?: string; rating?: number; priceFrom?: number; priceTo?: number; status?: string; categoryId?: string; instructorId?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<CourseResponse>> {
-    const { data } = await api.get('/api/v1/admin/courses', { params: { page, size, query, sort, rating, priceFrom, priceTo, status, categoryId, instructorId }, ...config });
+  async replayRecommendationEvents(config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
+    const { data } = await api.post('/api/v1/admin/courses/recommendation/replay', undefined, config);
+    return data;
+  },
+
+  async getAllCourses_1({ page, size, query, sort, rating, priceFrom, priceTo, status, publishStatus, categoryId, instructorId }: { page?: number; size?: number; query?: string; sort?: string; rating?: number; priceFrom?: number; priceTo?: number; status?: string; publishStatus?: string; categoryId?: string; instructorId?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<CourseResponse>> {
+    const { data } = await api.get('/api/v1/admin/courses', { params: { page, size, query, sort, rating, priceFrom, priceTo, status, publishStatus, categoryId, instructorId }, ...config });
     return data;
   },
 
@@ -390,8 +441,18 @@ export const AdminCourseService = {
     return data;
   },
 
-  async getCourseChanges({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseChangeResponse[]>> {
-    const { data } = await api.get(`/api/v1/admin/courses/${id}/changes`, config);
+  async getCourseDraft_1({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
+    const { data } = await api.get(`/api/v1/admin/courses/${id}/draft`, config);
+    return data;
+  },
+
+  async getDraftCurriculum_1({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseCurriculumResponse>> {
+    const { data } = await api.get(`/api/v1/admin/courses/${id}/draft/curriculum`, config);
+    return data;
+  },
+
+  async getCourseCurriculum({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseCurriculumResponse>> {
+    const { data } = await api.get(`/api/v1/admin/courses/${id}/curriculum`, config);
     return data;
   },
 };

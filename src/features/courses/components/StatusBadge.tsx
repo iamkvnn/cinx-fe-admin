@@ -1,7 +1,16 @@
 import { Badge } from "@/components/ui/badge"
+import type { CourseResponse } from "@/types"
 
 interface StatusBadgeProps {
   status?: string
+}
+
+export function getCourseDisplayStatus(course: CourseResponse): string {
+  if (course.status === "ARCHIVED") return "ARCHIVED";
+  if (course.publishStatus === "WAITING_APPROVAL") return "WAITING_APPROVAL";
+  if (course.publishStatus === "REJECTED") return "REJECTED";
+  if (course.status === "PUBLISHED" || course.publishStatus === "PUBLISHED") return "PUBLISHED";
+  return "DRAFT";
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
@@ -20,3 +29,4 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       return <Badge variant="outline">{status}</Badge>
   }
 }
+
