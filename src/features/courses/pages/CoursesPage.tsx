@@ -1,14 +1,16 @@
 import * as React from "react"
 import { useNavigate } from "react-router-dom"
-import { Eye } from "lucide-react"
+import { Eye, Filter, FilterX } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import { DataTableWrapper } from "@/components/shared/data-table"
 import type { Column } from "@/components/shared/data-table"
 import { useTableState } from "@/hooks/useTableState"
-import { AdminCourseService } from "@/services"
+import { AdminCourseService, CategoryService, UserService } from "@/services"
 import type { CourseResponse, PaginatedApiResponse } from "@/types"
 import { StatusBadge } from "../components/StatusBadge"
 
@@ -42,6 +44,18 @@ export function CoursesPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("ALL")
+  
+  const [categoryFilter, setCategoryFilter] = React.useState("ALL")
+  const [instructorFilter, setInstructorFilter] = React.useState("ALL")
+  const [ratingFilter, setRatingFilter] = React.useState("ALL")
+  
+  const [priceFrom, setPriceFrom] = React.useState("")
+  const [debouncedPriceFrom, setDebouncedPriceFrom] = React.useState("")
+  
+  const [priceTo, setPriceTo] = React.useState("")
+  const [debouncedPriceTo, setDebouncedPriceTo] = React.useState("")
+  
+  const [showAdvanced, setShowAdvanced] = React.useState(false)
 
   const {
     page, pageSize, sortConfig, visibleColumns,
@@ -53,12 +67,44 @@ export function CoursesPage() {
     return () => clearTimeout(t)
   }, [searchTerm])
 
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebouncedPriceFrom(priceFrom), 500)
+    return () => clearTimeout(t)
+  }, [priceFrom])
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebouncedPriceTo(priceTo), 500)
+    return () => clearTimeout(t)
+  }, [priceTo])
+
+  // Fetch Category options
+  const { data: categoriesData } = useQuery({
+    queryKey: ["categories-all"],
+    queryFn: () => CategoryService.getAllCategories(),
+  })
+  const categories = categoriesData?.data || []
+
+  // Fetch Instructor options
+  const { data: instructorsData } = useQuery({
+    queryKey: ["instructors-all"],
+    queryFn: () => UserService.getAllUsers({ role: "INSTRUCTOR", size: 100 }),
+  })
+  const instructors = instructorsData?.data || []
+
   const { data, isLoading } = useQuery({
-    queryKey: ["courses", page, pageSize, debouncedSearch, statusFilter],
+    queryKey: [
+      "courses", page, pageSize, debouncedSearch, statusFilter,
+      categoryFilter, instructorFilter, ratingFilter, debouncedPriceFrom, debouncedPriceTo
+    ],
     queryFn: () => AdminCourseService.getAllCourses_1({
       page, size: pageSize,
       query: debouncedSearch || undefined,
       status: statusFilter === "ALL" ? undefined : (statusFilter as any),
+      categoryId: categoryFilter === "ALL" ? undefined : categoryFilter,
+      instructorId: instructorFilter === "ALL" ? undefined : instructorFilter,
+      rating: ratingFilter === "ALL" ? undefined : Number(ratingFilter),
+      priceFrom: debouncedPriceFrom ? Number(debouncedPriceFrom) : undefined,
+      priceTo: debouncedPriceTo ? Number(debouncedPriceTo) : undefined,
     }),
   })
 
@@ -67,6 +113,26 @@ export function CoursesPage() {
     message: "",
     data: [],
     meta: { page: 1, limit: 10, totalElements: 0, totalPages: 0 }
+  }
+
+  const activeAdvancedCount = [
+    statusFilter !== "ALL",
+    categoryFilter !== "ALL",
+    instructorFilter !== "ALL",
+    ratingFilter !== "ALL",
+    priceFrom !== "",
+    priceTo !== "",
+  ].filter(Boolean).length
+
+  const handleResetFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("ALL")
+    setCategoryFilter("ALL")
+    setInstructorFilter("ALL")
+    setRatingFilter("ALL")
+    setPriceFrom("")
+    setPriceTo("")
+    handlePageChange(1)
   }
 
   const columns: Column<CourseResponse>[] = [
@@ -89,6 +155,101 @@ export function CoursesPage() {
         <h2 className="text-2xl font-bold tracking-tight">Danh sách Khóa học</h2>
       </div>
 
+      {showAdvanced && (
+        <Card className="p-4 bg-muted/30 border shadow-inner animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Trạng thái</label>
+              <Select value={statusFilter} onValueChange={val => { setStatusFilter(val || "ALL"); handlePageChange(1) }}>
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Tất cả trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
+                  <SelectItem value="WAITING_APPROVAL">Chờ duyệt</SelectItem>
+                  <SelectItem value="PUBLISHED">Đã xuất bản</SelectItem>
+                  <SelectItem value="REJECTED">Từ chối</SelectItem>
+                  <SelectItem value="DRAFT">Bản nháp</SelectItem>
+                  <SelectItem value="ARCHIVED">Lưu trữ</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Danh mục</label>
+              <Select value={categoryFilter} onValueChange={val => { setCategoryFilter(val || "ALL"); handlePageChange(1) }}>
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Chọn danh mục" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tất cả danh mục</SelectItem>
+                  {categories.map((cat: any) => (
+                    <SelectItem key={cat.id} value={cat.id || ""}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Giảng viên</label>
+              <Select value={instructorFilter} onValueChange={val => { setInstructorFilter(val || "ALL"); handlePageChange(1) }}>
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Chọn giảng viên" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tất cả giảng viên</SelectItem>
+                  {instructors.map((ins: any) => (
+                    <SelectItem key={ins.userId} value={ins.userId || ""}>
+                      {ins.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Đánh giá</label>
+              <Select value={ratingFilter} onValueChange={val => { setRatingFilter(val || "ALL"); handlePageChange(1) }}>
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Tất cả đánh giá" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Tất cả đánh giá</SelectItem>
+                  <SelectItem value="4">&ge; 4 sao</SelectItem>
+                  <SelectItem value="3">&ge; 3 sao</SelectItem>
+                  <SelectItem value="2">&ge; 2 sao</SelectItem>
+                  <SelectItem value="1">&ge; 1 sao</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Giá từ (₫)</label>
+              <Input
+                type="number"
+                placeholder="Tối thiểu"
+                className="bg-background"
+                value={priceFrom}
+                onChange={e => { setPriceFrom(e.target.value); handlePageChange(1) }}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Giá đến (₫)</label>
+              <Input
+                type="number"
+                placeholder="Tối đa"
+                className="bg-background"
+                value={priceTo}
+                onChange={e => { setPriceTo(e.target.value); handlePageChange(1) }}
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
       <DataTableWrapper
         columns={columns}
         data={paginatedData}
@@ -104,29 +265,43 @@ export function CoursesPage() {
         emptyMessage="Không tìm thấy khóa học nào."
         onRowClick={(course) => navigate(`/courses/${course.id}`)}
         toolbarContent={
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex items-center justify-between gap-4 w-full">
             <Input
               type="search"
               placeholder="Tìm kiếm khóa học..."
-              className="max-w-sm"
+              className="max-w-sm w-full sm:w-[280px]"
               value={searchTerm}
               onChange={e => { setSearchTerm(e.target.value); handlePageChange(1) }}
             />
-            <Select value={statusFilter} onValueChange={val => { setStatusFilter(val || "ALL"); handlePageChange(1) }}>
-              <SelectTrigger className="w-45">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
-                  <SelectItem value="WAITING_APPROVAL">Chờ duyệt</SelectItem>
-                  <SelectItem value="PUBLISHED">Đã xuất bản</SelectItem>
-                  <SelectItem value="REJECTED">Từ chối</SelectItem>
-                  <SelectItem value="DRAFT">Bản nháp</SelectItem>
-                  <SelectItem value="ARCHIVED">Lưu trữ</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                variant={showAdvanced ? "default" : "outline"} 
+                size="sm" 
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-1.5 h-9"
+              >
+                <Filter className="h-4 w-4" />
+                Bộ lọc nâng cao
+                {activeAdvancedCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 h-5 bg-background text-foreground text-[10px] font-semibold border shadow-sm">
+                    {activeAdvancedCount}
+                  </Badge>
+                )}
+              </Button>
+              
+              {(searchTerm !== "" || statusFilter !== "ALL" || activeAdvancedCount > 0) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-1.5 h-9 text-muted-foreground hover:text-destructive"
+                >
+                  <FilterX className="h-4 w-4" />
+                  Đặt lại
+                </Button>
+              )}
+            </div>
           </div>
         }
       />

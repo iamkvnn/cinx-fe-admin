@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DataTableWrapper } from "@/components/shared/data-table"
 import type { Column } from "@/components/shared/data-table"
 import { useTableState } from "@/hooks/useTableState"
-import { adminReportService } from "@/services"
+import { AdminReportService } from "@/services"
 import type { Report, PaginatedApiResponse } from "@/types"
 
 const COLUMNS: Column<Report>[] = [
@@ -32,16 +32,16 @@ export function ReportsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", page, pageSize],
-    queryFn: () => adminReportService.getReports({ page, size: pageSize }),
+    queryFn: () => AdminReportService.getReports({ page, size: pageSize }),
   })
 
   const dismissMutation = useMutation({
-    mutationFn: (reportId: string) => adminReportService.dismissReport(reportId),
+    mutationFn: (reportId: string) => AdminReportService.dismissReport({ reportId }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["reports"] }); setIsDetailOpen(false) },
   })
 
   const deleteContentMutation = useMutation({
-    mutationFn: (reportId: string) => adminReportService.deleteReportedContent(reportId),
+    mutationFn: (reportId: string) => AdminReportService.deleteReportedContent({ reportId }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["reports"] }); setIsDetailOpen(false) },
   })
 

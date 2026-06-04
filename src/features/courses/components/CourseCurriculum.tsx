@@ -6,12 +6,13 @@ interface CourseCurriculumProps {
   sections: any[]
 }
 
-const formatDuration = (seconds: number | undefined) => {
-  if (!seconds) return '0 phút'
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  if (hours > 0) return `${hours} giờ ${minutes} phút`
-  return `${minutes} phút`
+const formatDuration = (minutes: number | undefined) => {
+  if (!minutes) return '0 phút'
+  const hours = Math.floor(minutes / 60)
+  const mins = Math.floor(minutes % 60)
+  if (hours > 0 && mins > 0) return `${hours} giờ ${mins} phút`
+  if (hours > 0) return `${hours} giờ`
+  return `${mins} phút`
 }
 
 export function CourseCurriculum({ sections }: CourseCurriculumProps) {

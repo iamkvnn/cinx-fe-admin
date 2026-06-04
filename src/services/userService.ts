@@ -8,11 +8,14 @@ import { api } from '@/lib/axios';
 
 import type {
   ApiResponse,
-  DeviceTokenRequest,
   PaginatedApiResponse,
+} from '@/types';
+import type {
+  DeviceTokenRequest,
   PresignedUrlResponse,
   UpdateProfileRequest,
   UserDto,
+  UserStatisticsOverviewResponse,
 } from '@/types';
 
 // ─────────────────────────────────────────────────────────────────
@@ -69,6 +72,16 @@ export const PresignedUrlService = {
   /** Get presigned URL for avatar upload */
   async getPresignedUrl({ fileName, contentType }: { fileName: string; contentType: string }, config?: AxiosRequestConfig): Promise<ApiResponse<PresignedUrlResponse>> {
     const { data } = await api.get('/api/v1/users/upload/presigned-url', { params: { fileName, contentType }, ...config });
+    return data;
+  },
+};
+
+// ── UserStatisticsService ──────────────────────────────────────────────
+export const UserStatisticsService = {
+
+  /** Get user statistics overview */
+  async getOverview({ groupBy, startDate, endDate }: { groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<UserStatisticsOverviewResponse>> {
+    const { data } = await api.get('/api/v1/users/statistics/overview', { params: { groupBy, startDate, endDate }, ...config });
     return data;
   },
 };

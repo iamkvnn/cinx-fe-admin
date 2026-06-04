@@ -32,7 +32,7 @@ export function InstructorDetailPage() {
   // 3. Fetch Instructor Revenue Analytics
   const { data: revenueAnalyticsData, isLoading: isLoadingRevenue } = useQuery({
     queryKey: ['instructor-revenue', id],
-    queryFn: () => StatisticsService.getInstructorRevenue({ instructorId: id as string, months: 6 }),
+    queryFn: () => StatisticsService.getInstructorRevenueSeries({ instructorId: id as string, groupBy: 'MONTH' }),
     enabled: !!id
   })
 

@@ -19,8 +19,7 @@ import {
   DropdownMenuTrigger, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuSeparator,
-  DropdownMenuLabel 
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
 import { UserService, notificationService } from "@/services"
 

@@ -9,6 +9,7 @@ import { api } from '@/lib/axios';
 import type {
   ApiResponse,
   PaginatedApiResponse,
+  AdminCourseStatisticsOverviewResponse,
   ArticleLessonResponse,
   AssignmentLessonResponse,
   CategoryResponse,
@@ -27,6 +28,7 @@ import type {
   CreateSubtitleTrackRequest,
   CreateVideoLessonRequest,
   CreateVideoQuestionRequest,
+  InstructorCourseStatisticsOverviewResponse,
   InstructorCourseSummaryResponse,
   LessonResponse,
   QuizLessonResponse,
@@ -118,7 +120,7 @@ export const CourseService = {
     return data;
   },
 
-  async getCourseById_1({ ids }: { ids: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse>> {
+  async getCourseById_1({ ids }: { ids: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseResponse[]>> {
     const { data } = await api.get('/api/v1/courses/ids', { params: { ids }, ...config });
     return data;
   },
@@ -194,7 +196,7 @@ export const SubtitleTrackService = {
     return data;
   },
 
-  async getSubtitles({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<SubtitleTrackResponse>> {
+  async getSubtitles({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<SubtitleTrackResponse[]>> {
     const { data } = await api.get(`/api/v1/courses/${courseId}/lessons/${lessonId}/videos/subtitles`, config);
     return data;
   },
@@ -223,7 +225,7 @@ export const VideoQuestionService = {
     return data;
   },
 
-  async getQuestionsByLessonId({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<VideoQuestionResponse>> {
+  async getQuestionsByLessonId({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<VideoQuestionResponse[]>> {
     const { data } = await api.get(`/api/v1/courses/${courseId}/lessons/${lessonId}/videos/questions`, config);
     return data;
   },
@@ -277,7 +279,7 @@ export const QuizQuestionService = {
   },
 
   /** List all questions for a quiz */
-  async getQuestions({ lessonId, courseId }: { lessonId: string; courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<QuizQuestionResponse>> {
+  async getQuestions({ lessonId, courseId }: { lessonId: string; courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<QuizQuestionResponse[]>> {
     const { data } = await api.get(`/api/v1/courses/${courseId}/lessons/${lessonId}/quizzes/questions`, config);
     return data;
   },
@@ -354,7 +356,7 @@ export const CategoryService = {
     return data;
   },
 
-  async getAllCategories(config?: AxiosRequestConfig): Promise<ApiResponse<CategoryResponse>> {
+  async getAllCategories(config?: AxiosRequestConfig): Promise<ApiResponse<CategoryResponse[]>> {
     const { data } = await api.get('/api/v1/categories', config);
     return data;
   },
@@ -388,8 +390,24 @@ export const AdminCourseService = {
     return data;
   },
 
-  async getCourseChanges({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseChangeResponse>> {
+  async getCourseChanges({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseChangeResponse[]>> {
     const { data } = await api.get(`/api/v1/admin/courses/${id}/changes`, config);
+    return data;
+  },
+};
+
+// ── CourseStatisticsService ──────────────────────────────────────────────
+export const CourseStatisticsService = {
+
+  /** Get my course statistics overview */
+  async getInstructorOverview({ groupBy, startDate, endDate }: { groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorCourseStatisticsOverviewResponse>> {
+    const { data } = await api.get('/api/v1/courses/mine/statistics/overview', { params: { groupBy, startDate, endDate }, ...config });
+    return data;
+  },
+
+  /** Get admin course statistics overview */
+  async getAdminOverview({ groupBy, startDate, endDate }: { groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<AdminCourseStatisticsOverviewResponse>> {
+    const { data } = await api.get('/api/v1/admin/courses/statistics/overview', { params: { groupBy, startDate, endDate }, ...config });
     return data;
   },
 };

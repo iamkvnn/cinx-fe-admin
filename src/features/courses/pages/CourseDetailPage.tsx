@@ -120,13 +120,13 @@ export function CourseDetailPage() {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
   }
 
-  const formatDuration = (seconds: number | undefined) => {
-    if (!seconds) return '0 phút'
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    if (hours > 0 && minutes > 0) return `${hours} giờ ${minutes} phút`
+  const formatDuration = (minutes: number | undefined) => {
+    if (!minutes) return '0 phút'
+    const hours = Math.floor(minutes / 60)
+    const mins = Math.floor(minutes % 60)
+    if (hours > 0 && mins > 0) return `${hours} giờ ${mins} phút`
     if (hours > 0) return `${hours} giờ`
-    return `${minutes} phút`
+    return `${mins} phút`
   }
 
   const renderLessonDiff = (oldL: any, newL: any) => {
@@ -152,8 +152,8 @@ export function CourseDetailPage() {
       )
     }
 
-    const titleChanged = oldL.title !== newL.title;
-    const durationChanged = oldL.duration !== newL.duration;
+    const titleChanged = (oldL.title || '').trim() !== (newL.title || '').trim();
+    const durationChanged = Number(oldL.duration ?? 0) !== Number(newL.duration ?? 0);
 
     if (!titleChanged && !durationChanged) {
       return (
@@ -226,14 +226,16 @@ export function CourseDetailPage() {
       )
     }
 
-    const titleChanged = oldSec.title !== newSec.title;
-    const descChanged = oldSec.description !== newSec.description;
+    const titleChanged = (oldSec.title || '').trim() !== (newSec.title || '').trim();
+    const descChanged = (oldSec.description || '').trim() !== (newSec.description || '').trim();
     const lessonIds = getUniqueIds(oldSec.lessons, newSec.lessons);
     
     const hasLessonChanges = lessonIds.some(lId => {
       const oL = oldSec.lessons?.find((l: any) => l.id === lId);
       const nL = newSec.lessons?.find((l: any) => l.id === lId);
-      return !oL || !nL || oL.title !== nL.title || oL.duration !== nL.duration;
+      return !oL || !nL || 
+        (oL.title || '').trim() !== (nL.title || '').trim() || 
+        Number(oL.duration ?? 0) !== Number(nL.duration ?? 0);
     });
 
     const isModified = titleChanged || descChanged || hasLessonChanges;
@@ -427,6 +429,16 @@ export function CourseDetailPage() {
 
   const sectionIds = getUniqueIds(publishedCurriculum, draftCurriculum)
 
+  const isTitleChanged = publishedCourse?.title !== course.title
+  const isPriceChanged = Number(publishedCourse?.price ?? 0) !== Number(course.price ?? 0)
+  
+  const oldDiscountedPrice = publishedCourse?.discountedPrice !== undefined ? publishedCourse.discountedPrice : (publishedCourse?.price || 0)
+  const newDiscountedPrice = course.discountedPrice !== undefined ? course.discountedPrice : (course.price || 0)
+  const isDiscountedPriceChanged = Number(oldDiscountedPrice) !== Number(newDiscountedPrice)
+  
+  const isDurationChanged = Number(publishedCourse?.duration ?? 0) !== Number(course.duration ?? 0)
+  const isDescriptionChanged = (publishedCourse?.description || '') !== (course.description || '')
+
   return (
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-4 rounded-md border">
@@ -514,28 +526,28 @@ export function CourseDetailPage() {
                       <TableBody>
                         <TableRow>
                           <TableCell className="font-medium align-top py-4">Tên khóa học</TableCell>
-                          <TableCell className="text-muted-foreground line-through align-top py-4">{publishedCourse?.title}</TableCell>
-                          <TableCell className="text-green-600 font-medium align-top py-4 bg-green-50/30 dark:bg-green-900/10">{course.title}</TableCell>
+                          <TableCell className={`align-top py-4 ${isTitleChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{publishedCourse?.title}</TableCell>
+                          <TableCell className={`align-top py-4 ${isTitleChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{course.title}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium align-top py-4">Giá gốc</TableCell>
-                          <TableCell className="text-muted-foreground line-through align-top py-4">{formatPrice(publishedCourse?.price || 0)}</TableCell>
-                          <TableCell className="text-green-600 font-medium align-top py-4 bg-green-50/30 dark:bg-green-900/10">{formatPrice(course.price)}</TableCell>
+                          <TableCell className={`align-top py-4 ${isPriceChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{formatPrice(publishedCourse?.price || 0)}</TableCell>
+                          <TableCell className={`align-top py-4 ${isPriceChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{formatPrice(course.price)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium align-top py-4">Giá bán</TableCell>
-                          <TableCell className="text-muted-foreground line-through align-top py-4">{formatPrice(publishedCourse?.discountedPrice !== undefined ? publishedCourse?.discountedPrice : publishedCourse?.price || 0)}</TableCell>
-                          <TableCell className="text-green-600 font-medium align-top py-4 bg-green-50/30 dark:bg-green-900/10">{formatPrice(course.discountedPrice !== undefined ? course.discountedPrice : course.price)}</TableCell>
+                          <TableCell className={`align-top py-4 ${isDiscountedPriceChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{formatPrice(publishedCourse?.discountedPrice !== undefined ? publishedCourse?.discountedPrice : publishedCourse?.price || 0)}</TableCell>
+                          <TableCell className={`align-top py-4 ${isDiscountedPriceChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{formatPrice(course.discountedPrice !== undefined ? course.discountedPrice : course.price)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium align-top py-4">Tổng thời lượng</TableCell>
-                          <TableCell className="text-muted-foreground line-through align-top py-4">{formatDuration(publishedCourse?.duration || 0)}</TableCell>
-                          <TableCell className="text-green-600 font-medium align-top py-4 bg-green-50/30 dark:bg-green-900/10">{formatDuration(course.duration)}</TableCell>
+                          <TableCell className={`align-top py-4 ${isDurationChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{formatDuration(publishedCourse?.duration || 0)}</TableCell>
+                          <TableCell className={`align-top py-4 ${isDurationChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{formatDuration(course.duration)}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium align-top py-4">Mô tả</TableCell>
-                          <TableCell className="text-muted-foreground line-through text-sm whitespace-pre-wrap align-top py-4">{publishedCourse?.description}</TableCell>
-                          <TableCell className="text-green-600 font-medium text-sm whitespace-pre-wrap align-top py-4 bg-green-50/30 dark:bg-green-900/10">{course.description}</TableCell>
+                          <TableCell className={`text-sm whitespace-pre-wrap align-top py-4 ${isDescriptionChanged ? 'text-muted-foreground line-through' : 'text-muted-foreground'}`}>{publishedCourse?.description}</TableCell>
+                          <TableCell className={`text-sm whitespace-pre-wrap align-top py-4 ${isDescriptionChanged ? 'text-green-600 font-medium bg-green-50/30 dark:bg-green-900/10' : 'text-muted-foreground'}`}>{course.description}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>

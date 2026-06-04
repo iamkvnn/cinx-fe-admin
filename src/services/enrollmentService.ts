@@ -88,7 +88,7 @@ export const OrderService = {
 // ── EnrollmentService ──────────────────────────────────────────────
 export const EnrollmentService = {
 
-  async checkEnrollmentStatus({ body }: { body: string[] }, config?: AxiosRequestConfig): Promise<ApiResponse<CheckEnrollmentStatus>> {
+  async checkEnrollmentStatus({ body }: { body: string[] }, config?: AxiosRequestConfig): Promise<ApiResponse<CheckEnrollmentStatus[]>> {
     const { data } = await api.post('/api/v1/enrollments/check', body, config);
     return data;
   },
@@ -102,27 +102,15 @@ export const EnrollmentService = {
 // ── StatisticsService ──────────────────────────────────────────────
 export const StatisticsService = {
 
-  /** Get yearly instructor statistics */
-  async getInstructorYearlyOverview({ year }: { year?: number }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorStatisticsResponse>> {
-    const { data } = await api.get('/api/v1/statistics/instructor/overview/yearly', { params: { year }, ...config });
+  /** Get instructor statistics */
+  async getInstructorOverview({ groupBy, startDate, endDate }: { groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorStatisticsResponse>> {
+    const { data } = await api.get('/api/v1/statistics/instructor/overview', { params: { groupBy, startDate, endDate }, ...config });
     return data;
   },
 
-  /** Get range instructor statistics */
-  async getInstructorRangeOverview({ startDate, endDate }: { startDate: string; endDate: string }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorStatisticsResponse>> {
-    const { data } = await api.get('/api/v1/statistics/instructor/overview/range', { params: { startDate, endDate }, ...config });
-    return data;
-  },
-
-  /** Get monthly instructor statistics */
-  async getInstructorMonthlyOverview({ year, month }: { year: number; month: number }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorStatisticsResponse>> {
-    const { data } = await api.get('/api/v1/statistics/instructor/overview/monthly', { params: { year, month }, ...config });
-    return data;
-  },
-
-  /** Get course specific statistics */
-  async getCourseStatistics({ courseId, year, month, startDate, endDate }: { courseId: string; year?: number; month?: number; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseStatisticsResponse>> {
-    const { data } = await api.get(`/api/v1/statistics/instructor/courses/${courseId}`, { params: { year, month, startDate, endDate }, ...config });
+  /** Get course specific statistics overview */
+  async getCourseStatisticsOverview({ courseId, groupBy, startDate, endDate }: { courseId: string; groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseStatisticsResponse>> {
+    const { data } = await api.get(`/api/v1/statistics/instructor/courses/${courseId}/overview`, { params: { groupBy, startDate, endDate }, ...config });
     return data;
   },
 
@@ -132,27 +120,15 @@ export const StatisticsService = {
     return data;
   },
 
-  /** Get admin yearly overview */
-  async getAdminYearlyOverview({ year }: { year?: number }, config?: AxiosRequestConfig): Promise<ApiResponse<AdminOverviewResponse>> {
-    const { data } = await api.get('/api/v1/statistics/admin/overview/yearly', { params: { year }, ...config });
+  /** Get admin overview */
+  async getAdminOverview({ groupBy, startDate, endDate }: { groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<AdminOverviewResponse>> {
+    const { data } = await api.get('/api/v1/statistics/admin/overview', { params: { groupBy, startDate, endDate }, ...config });
     return data;
   },
 
-  /** Get admin range overview */
-  async getAdminRangeOverview({ startDate, endDate }: { startDate: string; endDate: string }, config?: AxiosRequestConfig): Promise<ApiResponse<AdminOverviewResponse>> {
-    const { data } = await api.get('/api/v1/statistics/admin/overview/range', { params: { startDate, endDate }, ...config });
-    return data;
-  },
-
-  /** Get admin monthly overview */
-  async getAdminMonthlyOverview({ year, month }: { year: number; month: number }, config?: AxiosRequestConfig): Promise<ApiResponse<AdminOverviewResponse>> {
-    const { data } = await api.get('/api/v1/statistics/admin/overview/monthly', { params: { year, month }, ...config });
-    return data;
-  },
-
-  /** Get admin instructor revenue */
-  async getInstructorRevenue({ instructorId, months }: { instructorId: string; months?: number }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorRevenueResponse>> {
-    const { data } = await api.get(`/api/v1/statistics/admin/instructors/${instructorId}/revenue`, { params: { months }, ...config });
+  /** Get admin instructor revenue series */
+  async getInstructorRevenueSeries({ instructorId, groupBy, startDate, endDate }: { instructorId: string; groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<InstructorRevenueResponse>> {
+    const { data } = await api.get(`/api/v1/statistics/admin/instructors/${instructorId}/revenue/series`, { params: { groupBy, startDate, endDate }, ...config });
     return data;
   },
 };

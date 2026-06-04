@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query"
 import { Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DataTableWrapper } from "@/components/shared/data-table"
 import type { Column } from "@/components/shared/data-table"
 import { useTableState } from "@/hooks/useTableState"
@@ -25,7 +24,6 @@ export function UsersPage() {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
-  const [roleFilter, setRoleFilter] = React.useState("ALL")
 
   const {
     page, pageSize, sortConfig, visibleColumns,
@@ -38,12 +36,12 @@ export function UsersPage() {
   }, [searchTerm])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["users", page, pageSize, debouncedSearch, roleFilter],
+    queryKey: ["users", page, pageSize, debouncedSearch],
     queryFn: () => UserService.getAllUsers({
       page,
       size: pageSize,
       query: debouncedSearch || undefined,
-      role: roleFilter === "ALL" ? undefined : (roleFilter as any),
+      role: "USER",
     }),
   })
 
@@ -53,7 +51,6 @@ export function UsersPage() {
     data: [],
     meta: { page: 1, limit: 10, totalElements: 0, totalPages: 0 }
   }
-
 
   const columns: Column<UserDto>[] = [
     ...COLUMNS,
@@ -72,7 +69,7 @@ export function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Quản lý Người dùng</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Quản lý Học viên</h2>
       </div>
 
       <DataTableWrapper
@@ -87,30 +84,17 @@ export function UsersPage() {
         onSort={handleSort}
         visibleColumns={visibleColumns}
         onToggleColumn={handleToggleColumn}
-        emptyMessage="Không tìm thấy người dùng nào."
+        emptyMessage="Không tìm thấy học viên nào."
         onRowClick={(user) => navigate(`/users/${user.userId}`)}
         toolbarContent={
           <div className="flex items-center gap-2 w-full">
             <Input
               type="search"
-              placeholder="Tìm kiếm người dùng..."
+              placeholder="Tìm kiếm học viên..."
               className="max-w-sm"
               value={searchTerm}
               onChange={e => { setSearchTerm(e.target.value); handlePageChange(1) }}
             />
-            <Select value={roleFilter} onValueChange={val => { setRoleFilter(val || "ALL"); handlePageChange(1) }}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="ALL">Tất cả vai trò</SelectItem>
-                  <SelectItem value="USER">Người dùng</SelectItem>
-                  <SelectItem value="INSTRUCTOR">Giảng viên</SelectItem>
-                  <SelectItem value="ADMIN">Quản trị viên</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
           </div>
         }
       />

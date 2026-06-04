@@ -8,9 +8,13 @@ import { api } from '@/lib/axios';
 
 import type {
     ApiResponse,
+    PaginatedApiResponse,
+} from '@/types';
+import type {
     AssignmentSubmissionResponse,
     CertificateRequestResponse,
     ChooseQuizAnswerRequest,
+    CourseEngagementOverviewResponse,
     CourseProgressResponse,
     CoursesProgressSummaryResponse,
     CreateAssignmentSubmissionRequest,
@@ -18,12 +22,11 @@ import type {
     DailyGoalResponse,
     GradeEssayRequest,
     InVideoAssessmentSubmissionResponse,
-    LearningActivityByMonthResponse,
+    LearningActivityByTimeResponse,
     LearningActivityRequest,
     LearningItemProgressResponse,
     LearningPathRequest,
     LearningPathResponse,
-    PaginatedApiResponse,
     QuizQuestionAnalyticsResponse,
     QuizSessionQuestionResponse,
     QuizSessionResponse,
@@ -53,7 +56,7 @@ export const VideoNoteService = {
         return data;
     },
 
-    async getNotesByLesson({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<VideoNoteDto>> {
+    async getNotesByLesson({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<VideoNoteDto[]>> {
         const { data } = await api.get(`/api/v1/learning/courses/${courseId}/lessons/${lessonId}/video-notes`, config);
         return data;
     },
@@ -63,7 +66,7 @@ export const VideoNoteService = {
         return data;
     },
 
-    async getNotesByCourse({ courseId }: { courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<VideoNoteDto>> {
+    async getNotesByCourse({ courseId }: { courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<VideoNoteDto[]>> {
         const { data } = await api.get(`/api/v1/learning/courses/${courseId}/video-notes`, config);
         return data;
     },
@@ -73,7 +76,7 @@ export const VideoNoteService = {
 export const DailyGoalService = {
 
     /** Get current user's daily goals for a specific date */
-    async getDailyGoals({ date }: { date?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<DailyGoalResponse>> {
+    async getDailyGoals({ date }: { date?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<DailyGoalResponse[]>> {
         const { data } = await api.get('/api/v1/daily-goals', { params: { date }, ...config });
         return data;
     },
@@ -97,7 +100,7 @@ export const DailyGoalService = {
     },
 
     /** Get current user's daily goals for a specific month */
-    async getDailyGoalsInMonth({ year, month }: { year: number; month: number }, config?: AxiosRequestConfig): Promise<ApiResponse<DailyGoalResponse>> {
+    async getDailyGoalsInMonth({ year, month }: { year: number; month: number }, config?: AxiosRequestConfig): Promise<ApiResponse<DailyGoalResponse[]>> {
         const { data } = await api.get('/api/v1/daily-goals/month', { params: { year, month }, ...config });
         return data;
     },
@@ -137,7 +140,7 @@ export const CertificateService = {
     },
 
     /** Get all user certificates */
-    async getMyCertificates(config?: AxiosRequestConfig): Promise<ApiResponse<CertificateRequestResponse>> {
+    async getMyCertificates(config?: AxiosRequestConfig): Promise<ApiResponse<CertificateRequestResponse[]>> {
         const { data } = await api.get('/api/v1/certificates/my-certificates', config);
         return data;
     },
@@ -189,7 +192,7 @@ export const QuizSessionService = {
     },
 
     /** Get analytical statistics for a quiz */
-    async getQuizAnalytics({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<QuizQuestionAnalyticsResponse>> {
+    async getQuizAnalytics({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<QuizQuestionAnalyticsResponse[]>> {
         const { data } = await api.get(`/api/v1/learning/courses/${courseId}/lessons/${lessonId}/quiz-sessions/analytics`, config);
         return data;
     },
@@ -213,7 +216,7 @@ export const VideoTrackingService = {
         return data;
     },
 
-    async getVideoQuestionSubmissions({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<InVideoAssessmentSubmissionResponse>> {
+    async getVideoQuestionSubmissions({ courseId, lessonId }: { courseId: string; lessonId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<InVideoAssessmentSubmissionResponse[]>> {
         const { data } = await api.get(`/api/v1/learning/courses/${courseId}/lessons/${lessonId}/video-tracking/submissions`, config);
         return data;
     },
@@ -233,7 +236,7 @@ export const LearningProgressService = {
         return data;
     },
 
-    async getCourseProgressByCourseIds({ courseIds }: { courseIds: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseProgressResponse>> {
+    async getCourseProgressByCourseIds({ courseIds }: { courseIds: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseProgressResponse[]>> {
         const { data } = await api.get('/api/v1/learning/course-progress', { params: { courseIds }, ...config });
         return data;
     },
@@ -243,19 +246,19 @@ export const LearningProgressService = {
         return data;
     },
 
-    async getLearningItemProgressByCourseId({ courseId }: { courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<LearningItemProgressResponse>> {
+    async getLearningItemProgressByCourseId({ courseId }: { courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<LearningItemProgressResponse[]>> {
         const { data } = await api.get(`/api/v1/learning/course-progress/${courseId}/items`, config);
         return data;
     },
 
     /** Get detailed progress of a student in a course */
-    async getStudentProgress({ courseId, studentId }: { courseId: string; studentId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<LearningItemProgressResponse>> {
+    async getStudentProgress({ courseId, studentId }: { courseId: string; studentId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<LearningItemProgressResponse[]>> {
         const { data } = await api.get(`/api/v1/learning/course-progress/courses/${courseId}/students/${studentId}/progress`, config);
         return data;
     },
 
     /** Get overview progress of students in a course */
-    async getCourseProgress({ courseId }: { courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseProgressResponse>> {
+    async getCourseProgress({ courseId }: { courseId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseProgressResponse[]>> {
         const { data } = await api.get(`/api/v1/learning/course-progress/courses/${courseId}/progress`, config);
         return data;
     },
@@ -303,7 +306,7 @@ export const LearningActivityService = {
 // ── LearningPathService ──────────────────────────────────────────────
 export const LearningPathService = {
 
-    async getLearningPaths(config?: AxiosRequestConfig): Promise<ApiResponse<LearningPathResponse>> {
+    async getLearningPaths(config?: AxiosRequestConfig): Promise<ApiResponse<LearningPathResponse[]>> {
         const { data } = await api.get('/api/v1/learning-paths', config);
         return data;
     },
@@ -338,6 +341,22 @@ export const StreakService = {
     },
 };
 
+// ── LearningEngagementStatisticsService ──────────────────────────────────────────────
+export const LearningEngagementStatisticsService = {
+
+    /** Get instructor course engagement overview */
+    async getInstructorCourseEngagement({ courseId, groupBy, startDate, endDate }: { courseId: string; groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseEngagementOverviewResponse>> {
+        const { data } = await api.get(`/api/v1/learning/courses/${courseId}/engagement/overview`, { params: { groupBy, startDate, endDate }, ...config });
+        return data;
+    },
+
+    /** Get admin course engagement overview */
+    async getAdminCourseEngagement({ courseId, groupBy, startDate, endDate }: { courseId: string; groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseEngagementOverviewResponse>> {
+        const { data } = await api.get(`/api/v1/learning/admin/courses/${courseId}/engagement/overview`, { params: { groupBy, startDate, endDate }, ...config });
+        return data;
+    },
+};
+
 // ── AdminLearningService ──────────────────────────────────────────────
 export const AdminLearningService = {
 
@@ -346,13 +365,13 @@ export const AdminLearningService = {
         return data;
     },
 
-    async getUserCourseProgress({ userId, courseIds }: { userId: string; courseIds: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseProgressResponse>> {
+    async getUserCourseProgress({ userId, courseIds }: { userId: string; courseIds: string }, config?: AxiosRequestConfig): Promise<ApiResponse<CourseProgressResponse[]>> {
         const { data } = await api.get(`/api/v1/learning/admin/users/${userId}/course-progress`, { params: { courseIds }, ...config });
         return data;
     },
 
-    async getUserActivity({ userId, months }: { userId: string; months?: number }, config?: AxiosRequestConfig): Promise<ApiResponse<LearningActivityByMonthResponse>> {
-        const { data } = await api.get(`/api/v1/learning/admin/users/${userId}/activity`, { params: { months }, ...config });
+    async getUserActivitySeries({ userId, groupBy, startDate, endDate }: { userId: string; groupBy?: string; startDate?: string; endDate?: string }, config?: AxiosRequestConfig): Promise<ApiResponse<LearningActivityByTimeResponse[]>> {
+        const { data } = await api.get(`/api/v1/learning/admin/users/${userId}/activity/series`, { params: { groupBy, startDate, endDate }, ...config });
         return data;
     },
 

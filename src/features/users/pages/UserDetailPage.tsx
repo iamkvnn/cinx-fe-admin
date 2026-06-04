@@ -40,7 +40,7 @@ export function UserDetailPage() {
   // 4. Fetch User Activity (for chart)
   const { data: activityData, isLoading: isLoadingActivity } = useQuery({
     queryKey: ['user-activity', id],
-    queryFn: () => AdminLearningService.getUserActivity({ userId: id as string, months: 6 }),
+    queryFn: () => AdminLearningService.getUserActivitySeries({ userId: id as string, groupBy: 'MONTH' }),
     enabled: !!id
   })
 
@@ -82,7 +82,7 @@ export function UserDetailPage() {
   // Format activity chart data
   const formattedActivity = activityData?.data && Array.isArray(activityData.data)
     ? activityData.data.map((item: any) => ({
-        month: item.month || "",
+        month: item.timeLabel || "",
         hours: Math.round((item.activeSeconds || 0) / 3600 * 10) / 10
       }))
     : []
