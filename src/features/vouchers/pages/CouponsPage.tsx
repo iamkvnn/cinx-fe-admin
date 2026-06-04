@@ -9,6 +9,7 @@ import type { Column } from "@/components/shared/data-table"
 import { useTableState } from "@/hooks/useTableState"
 import { VoucherService } from "@/services"
 import type { VoucherResponse, PaginatedApiResponse } from "@/types"
+import { DateTimePicker } from "@/components/ui/date-time-picker"
 
 const formatPrice = (price: number | undefined) =>
   price === undefined ? "0 ₫" : new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price)
@@ -134,11 +135,11 @@ export function CouponsPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Hiệu lực từ</label>
-                    <Input type="datetime-local" value={validFrom} onChange={e => setValidFrom(e.target.value)} required />
+                    <DateTimePicker value={validFrom} onChange={setValidFrom} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Hết hạn</label>
-                    <Input type="datetime-local" value={validTo} onChange={e => setValidTo(e.target.value)} required />
+                    <DateTimePicker value={validTo} onChange={setValidTo} />
                   </div>
                 </div>
               </div>
@@ -179,7 +180,7 @@ export function CouponsPage() {
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
-          <form onSubmit={(e) => { e.preventDefault(); if (editingVoucher?.id) updateMutation.mutate({ id: editingVoucher.id, req: { code: editingVoucher.code, discountAmount: Number(editingVoucher.discountAmount) } }) }}>
+          <form onSubmit={(e) => { e.preventDefault(); if (editingVoucher?.id) updateMutation.mutate({ id: editingVoucher.id, req: { code: editingVoucher.code, discountAmount: Number(editingVoucher.discountAmount), quantity: Number(editingVoucher.quantity), validFrom: editingVoucher.validFrom ? new Date(editingVoucher.validFrom).toISOString() : undefined, validTo: editingVoucher.validTo ? new Date(editingVoucher.validTo).toISOString() : undefined } }) }}>
             <DialogHeader>
               <DialogTitle>Sửa mã giảm giá</DialogTitle>
             </DialogHeader>
@@ -201,6 +202,32 @@ export function CouponsPage() {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Số lượng</label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={editingVoucher?.quantity || ""}
+                  onChange={e => setEditingVoucher(prev => prev ? { ...prev, quantity: Number(e.target.value) } : null)}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Hiệu lực từ</label>
+                  <DateTimePicker
+                    value={editingVoucher?.validFrom || ""}
+                    onChange={val => setEditingVoucher(prev => prev ? { ...prev, validFrom: val } : null)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Hết hạn</label>
+                  <DateTimePicker
+                    value={editingVoucher?.validTo || ""}
+                    onChange={val => setEditingVoucher(prev => prev ? { ...prev, validTo: val } : null)}
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button type="submit" disabled={updateMutation.isPending}>
@@ -213,3 +240,4 @@ export function CouponsPage() {
     </div>
   )
 }
+

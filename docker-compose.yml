@@ -1,0 +1,9 @@
+services:
+  fe-admin:
+    container_name: cinx-fe-admin
+    image: ${DOCKERHUB_USERNAME}/cinx-fe-admin:latest
+    ports:
+      - "${HOST_PORT}:80"
+    restart: unless-stopped
+    env_file:
+      - .env

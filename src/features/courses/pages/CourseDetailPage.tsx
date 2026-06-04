@@ -32,7 +32,7 @@ export function CourseDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [showDiff, setShowDiff] = React.useState(true)
+  const [showDiff, setShowDiff] = React.useState(false)
 
   // 1. DRAFT COURSE INFO (Current/Latest)
   const { data: draftCourseData, isLoading: isLoadingDraft } = useQuery({
@@ -166,8 +166,9 @@ export function CourseDetailPage() {
 
     const titleChanged = (oldL.title || '').trim() !== (newL.title || '').trim();
     const durationChanged = Number(oldL.duration ?? 0) !== Number(newL.duration ?? 0);
+    const orderChanged = oldL.orderIndex !== undefined && newL.orderIndex !== undefined && Number(oldL.orderIndex) !== Number(newL.orderIndex);
 
-    if (!titleChanged && !durationChanged) {
+    if (!titleChanged && !durationChanged && !orderChanged) {
       return (
         <div key={newL.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-md bg-muted/20 border border-transparent mt-2">
           <span className="text-muted-foreground text-sm flex items-center gap-2">
@@ -194,13 +195,23 @@ export function CourseDetailPage() {
             )}
           </div>
         </div>
-        {durationChanged && (
-          <div className="text-xs flex items-center gap-1">
-            <span className="line-through text-muted-foreground">{formatDuration(oldL.duration)}</span>
-            <ArrowRight className="w-3 h-3 text-blue-500" />
-            <span className="text-blue-600 font-medium">{formatDuration(newL.duration)}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-4 text-xs ml-6 sm:ml-0">
+          {orderChanged && (
+            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-medium">
+              Thứ tự: #{oldL.orderIndex ?? 0} → #{newL.orderIndex ?? 0}
+            </span>
+          )}
+          {durationChanged && (
+            <div className="text-xs flex items-center gap-1">
+              <span className="line-through text-muted-foreground">{formatDuration(oldL.duration)}</span>
+              <ArrowRight className="w-3 h-3 text-blue-500" />
+              <span className="text-blue-600 font-medium">{formatDuration(newL.duration)}</span>
+            </div>
+          )}
+          {!durationChanged && (
+            <span className="text-muted-foreground">{formatDuration(newL.duration)}</span>
+          )}
+        </div>
       </div>
     )
   }
@@ -240,17 +251,31 @@ export function CourseDetailPage() {
 
     const titleChanged = (oldSec.title || '').trim() !== (newSec.title || '').trim();
     const descChanged = (oldSec.description || '').trim() !== (newSec.description || '').trim();
+    const orderChanged = oldSec.orderIndex !== undefined && newSec.orderIndex !== undefined && Number(oldSec.orderIndex) !== Number(newSec.orderIndex);
     const lessonIds = getUniqueIds(oldSec.lessons, newSec.lessons);
+
+    // Sort lessonIds by new sequence
+    const sortedLessonIds = [...lessonIds].sort((a, b) => {
+      const idxA = newSec.lessons?.findIndex((l: any) => l.id === a) ?? -1;
+      const idxB = newSec.lessons?.findIndex((l: any) => l.id === b) ?? -1;
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      const oldIdxA = oldSec.lessons?.findIndex((l: any) => l.id === a) ?? -1;
+      const oldIdxB = oldSec.lessons?.findIndex((l: any) => l.id === b) ?? -1;
+      return oldIdxA - oldIdxB;
+    });
 
     const hasLessonChanges = lessonIds.some(lId => {
       const oL = oldSec.lessons?.find((l: any) => l.id === lId);
       const nL = newSec.lessons?.find((l: any) => l.id === lId);
       return !oL || !nL ||
         (oL.title || '').trim() !== (nL.title || '').trim() ||
-        Number(oL.duration ?? 0) !== Number(nL.duration ?? 0);
+        Number(oL.duration ?? 0) !== Number(nL.duration ?? 0) ||
+        (oL.orderIndex !== undefined && nL.orderIndex !== undefined && Number(oL.orderIndex) !== Number(nL.orderIndex));
     });
 
-    const isModified = titleChanged || descChanged || hasLessonChanges;
+    const isModified = titleChanged || descChanged || orderChanged || hasLessonChanges;
 
     return (
       <div key={newSec.id} className={`p-4 bg-card rounded-r-md border-y border-r ${isModified ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'}`}>
@@ -267,9 +292,21 @@ export function CourseDetailPage() {
                   <span className="line-through text-muted-foreground">{oldSec.title}</span>
                   <ArrowRight className="w-4 h-4 text-blue-500" />
                   <span className="text-blue-700 dark:text-blue-400">{newSec.title}</span>
+                  {orderChanged && (
+                    <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-normal">
+                      Thứ tự phần: #{oldSec.orderIndex ?? 0} → #{newSec.orderIndex ?? 0}
+                    </span>
+                  )}
                 </h4>
               ) : (
-                <h4 className="font-semibold">{newSec.title}</h4>
+                <h4 className="font-semibold flex items-center gap-2 flex-wrap">
+                  <span>{newSec.title}</span>
+                  {orderChanged && (
+                    <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-normal">
+                      Thứ tự phần: #{oldSec.orderIndex ?? 0} → #{newSec.orderIndex ?? 0}
+                    </span>
+                  )}
+                </h4>
               )}
               {descChanged && (
                 <div className="text-sm mt-2 p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded border border-blue-100 dark:border-blue-900/50">
@@ -280,7 +317,7 @@ export function CourseDetailPage() {
             </div>
 
             <div className="space-y-0 border-l-2 border-muted pl-4 ml-1">
-              {lessonIds.map(lId => renderLessonDiff(
+              {sortedLessonIds.map(lId => renderLessonDiff(
                 oldSec.lessons?.find((l: any) => l.id === lId),
                 newSec.lessons?.find((l: any) => l.id === lId)
               ))}
@@ -438,7 +475,17 @@ export function CourseDetailPage() {
     </div>
   )
 
-  const sectionIds = getUniqueIds(publishedCurriculum, draftCurriculum)
+  const rawSectionIds = getUniqueIds(publishedCurriculum, draftCurriculum)
+  const sectionIds = [...rawSectionIds].sort((a, b) => {
+    const idxA = draftCurriculum?.findIndex((s: any) => s.id === a) ?? -1
+    const idxB = draftCurriculum?.findIndex((s: any) => s.id === b) ?? -1
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB
+    if (idxA !== -1) return -1
+    if (idxB !== -1) return 1
+    const oldIdxA = publishedCurriculum?.findIndex((s: any) => s.id === a) ?? -1
+    const oldIdxB = publishedCurriculum?.findIndex((s: any) => s.id === b) ?? -1
+    return oldIdxA - oldIdxB
+  })
 
   const isTitleChanged = publishedCourse?.title !== course.title
   const isPriceChanged = Number(publishedCourse?.price ?? 0) !== Number(course.price ?? 0)
@@ -487,7 +534,7 @@ export function CourseDetailPage() {
 
       {isUpdate ? (
         <Tabs defaultValue="update" className="w-full">
-          <TabsList className="mb-6 w-full sm:w-auto grid grid-cols-2">
+          <TabsList className="mb-6 w-full sm:w-auto grid grid-cols-2 group-data-horizontal/tabs:h-12">
             <TabsTrigger value="current" className="py-2">Thông tin</TabsTrigger>
             <TabsTrigger value="update" className="py-2 relative">
               Bản cập nhật
