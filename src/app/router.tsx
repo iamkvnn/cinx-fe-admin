@@ -3,6 +3,7 @@ import { AdminLayout } from '@/layouts/AdminLayout'
 import { ProtectedRoute } from '@/components/common/ProtectedRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
+import { OAuthCallbackPage } from '@/features/auth/pages/OAuthCallbackPage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { CoursesPage } from '@/features/courses/pages/CoursesPage'
 import { CourseDetailPage } from '@/features/courses/pages/CourseDetailPage'
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
   {
     path: '/forgot-password',
     element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/oauth2/callback',
+    element: <OAuthCallbackPage />,
   },
 
   // ─── Protected routes (require auth) ─────────────────────────────────────

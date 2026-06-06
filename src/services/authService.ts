@@ -8,9 +8,10 @@ import { api } from '@/lib/axios';
 
 import type {
   ApiResponse,
+} from '@/types';
+import type {
   AuthRequestDto,
   BanUserRequest,
-  ChangeEmailRequest,
   ChangePasswordRequest,
   OAuthRequest,
   RefreshTokenRequest,
@@ -46,11 +47,6 @@ export const AuthService = {
     return data;
   },
 
-  async sendChangeEmailOtp({ body }: { body: SendOtpRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
-    const { data } = await api.post('/api/v1/auth/send-change-email-otp', body, config);
-    return data;
-  },
-
   async resetPassword({ body }: { body: ResetPasswordRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
     const { data } = await api.post('/api/v1/auth/reset-password', body, config);
     return data;
@@ -78,11 +74,6 @@ export const AuthService = {
 
   async changePassword({ body }: { body: ChangePasswordRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
     const { data } = await api.post('/api/v1/auth/change-password', body, config);
-    return data;
-  },
-
-  async changeEmail({ body }: { body: ChangeEmailRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
-    const { data } = await api.post('/api/v1/auth/change-email', body, config);
     return data;
   },
 };

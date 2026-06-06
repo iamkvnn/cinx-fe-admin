@@ -32,6 +32,40 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>
 
+function dec2hex(dec: number) {
+  return dec.toString(16).padStart(2, "0")
+}
+
+function generateCodeVerifier() {
+  const array = new Uint32Array(56 / 2)
+  window.crypto.getRandomValues(array)
+  return Array.from(array, dec2hex).join("")
+}
+
+function sha256(plain: string) {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(plain)
+  return window.crypto.subtle.digest("SHA-256", data)
+}
+
+function base64urlencode(a: ArrayBuffer) {
+  let str = ""
+  const bytes = new Uint8Array(a)
+  const len = bytes.byteLength
+  for (let i = 0; i < len; i++) {
+    str += String.fromCharCode(bytes[i])
+  }
+  return btoa(str)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+}
+
+async function generateCodeChallenge(v: string) {
+  const hashed = await sha256(v)
+  return base64urlencode(hashed)
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
   const { setTokens, isAuthenticated } = useAuthStore()
@@ -63,16 +97,40 @@ export function LoginPage() {
   })
 
   const onSubmit = (formData: LoginFormData) => {
-    loginMutation.mutate(formData)
+    loginMutation.mutate({
+      ...formData,
+      role: "ADMIN"
+    })
   }
 
-  const handleGoogleLogin = () => {
-    console.log("Google Login clicked")
+  const handleGoogleLogin = async () => {
+    try {
+      const verifier = generateCodeVerifier()
+      localStorage.setItem("google_oauth_code_verifier", verifier)
+      const challenge = await generateCodeChallenge(verifier)
+
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ""
+      const redirectUri = `${window.location.origin}/oauth2/callback`
+
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: "code",
+        scope: "openid email profile",
+        code_challenge: challenge,
+        code_challenge_method: "S256",
+        prompt: "select_account"
+      })
+
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+    } catch (error) {
+      console.error("Lỗi khởi tạo Google Login:", error)
+    }
   }
 
   return (
     <div className="min-h-screen w-full bg-[#f3f6fc] font-sans flex items-center justify-center p-4 md:p-8 selection:bg-blue-500 selection:text-white relative overflow-hidden">
-      
+
       {/* Soft colorful gradient blobs in the background (Mesh Gradient) */}
       <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-400/20 via-indigo-300/20 to-purple-300/20 blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[700px] h-[700px] rounded-full bg-gradient-to-br from-indigo-300/15 via-purple-300/25 to-pink-300/15 blur-[140px] pointer-events-none" />
@@ -110,15 +168,15 @@ export function LoginPage() {
 
       {/* Main Container: max-w-5xl (1024px) for perfect balance on wide screens */}
       <div className="w-full max-w-5xl grid md:grid-cols-12 gap-8 md:gap-12 items-center z-10">
-        
+
         {/* ─── LEFT COLUMN: Brand Presentation & Dashboard Mockup ─── */}
         <div className="md:col-span-6 flex flex-col justify-center space-y-6 md:space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
-          
+
           {/* Logo Header */}
           <div className="flex items-center gap-3">
             <GraduationCap className="h-9 w-9 text-blue-600 shrink-0" strokeWidth={2.2} />
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight text-[#0f172a] leading-none">EduManage</span>
+              <span className="text-xl font-bold tracking-tight text-[#0f172a] leading-none">CinxManage</span>
               <span className="text-[10px] text-slate-400 font-semibold mt-1">Hệ thống quản lý đào tạo</span>
             </div>
           </div>
@@ -129,21 +187,21 @@ export function LoginPage() {
               Quản lý <span className="text-blue-600">hiệu quả</span> <br />
               Nâng tầm giáo dục
             </h1>
-            
+
             {/* The "— ." dash-dot underline decoration */}
             <div className="flex items-center gap-1.5 mt-3">
               <div className="h-[4px] w-8 bg-blue-600 rounded-full" />
               <div className="h-[4px] w-[4px] bg-blue-600 rounded-full" />
             </div>
-            
+
             <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-md pt-2">
-              EduManage giúp quản lý toàn diện doanh thu, khóa học, học viên và giảng viên trên một nền tảng duy nhất.
+              CinxManage giúp quản lý toàn diện doanh thu, khóa học, học viên và giảng viên trên một nền tảng duy nhất.
             </p>
           </div>
 
           {/* Laptop and rounded square (squircle) floating icons - Laptop wrapper scaled up */}
           <div className="relative w-full max-w-[460px] md:max-w-[520px] lg:max-w-[560px] aspect-[1.35] pt-12 mx-auto md:mx-0 select-none">
-            
+
             {/* Floating Icon 1: Blue Stats (Top Middle-Left) */}
             <div className="absolute top-[3%] left-[24%] z-20 h-12 w-12 rounded-[1.25rem] bg-gradient-to-tr from-blue-600 to-blue-400 text-white flex items-center justify-center shadow-lg shadow-blue-600/35 animate-float-slow border border-white">
               <BarChart3 className="h-5.5 w-5.5" />
@@ -168,20 +226,20 @@ export function LoginPage() {
             <div className="w-full relative">
               {/* Screen Bezel (Silver/White Laptop) - Increased padding for clear visibility */}
               <div className="w-full aspect-[1.58] bg-[#cbd5e1] p-1.5 shadow-2xl rounded-t-2xl border border-white/90 flex flex-col relative z-10">
-                
+
                 {/* Camera dot */}
                 <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-slate-800" />
 
                 {/* Screen Content - Scale up all text and graphs inside */}
                 <div className="w-full h-full bg-white rounded-xl overflow-hidden flex border border-slate-200/60 shadow-inner">
-                  
+
                   {/* Sidebar mockup - Wider for readable items */}
                   <div className="w-[30%] border-r border-slate-100 bg-slate-50/80 p-2 flex flex-col gap-1.5 shrink-0">
                     <div className="flex items-center gap-1.5 mb-2">
                       <div className="w-3.5 h-3.5 rounded bg-blue-600 flex items-center justify-center text-[6px] text-white">
                         <GraduationCap className="h-2 w-2" />
                       </div>
-                      <span className="text-[8px] font-bold text-slate-800 leading-none">EduManage</span>
+                      <span className="text-[8px] font-bold text-slate-800 leading-none">CinxManage</span>
                     </div>
                     <div className="h-4.5 w-full rounded bg-blue-50 text-blue-600 flex items-center px-1.5">
                       <div className="w-1.5 h-1.5 bg-blue-600 rounded-sm mr-1.5 shrink-0" />
@@ -230,7 +288,7 @@ export function LoginPage() {
                     <div className="flex-1 rounded-lg bg-slate-50 border border-slate-100 p-2 flex flex-col justify-between overflow-hidden shadow-sm min-h-[80px]">
                       <span className="text-[6px] text-slate-400 font-semibold leading-none">Doanh thu theo tháng</span>
                       <div className="flex-1 relative flex items-end mt-1.5">
-                        
+
                         {/* Custom Horizontal Grid Lines */}
                         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50">
                           <div className="border-b border-slate-200/50 w-full h-0" />
@@ -280,7 +338,7 @@ export function LoginPage() {
 
                 </div>
               </div>
-              
+
               {/* Keyboard Base: physically touching screen bezel with correct margin */}
               <div className="w-[106%] -ml-[3%] h-3.5 bg-gradient-to-b from-[#e2e8f0] to-[#cbd5e1] rounded-b-2xl border-t border-white shadow-[0_12px_24px_-10px_rgba(0,0,0,0.25)] flex items-start justify-center relative z-20 -mt-0.5">
                 {/* Trackpad */}
@@ -294,21 +352,21 @@ export function LoginPage() {
         {/* ─── RIGHT COLUMN: Form Card ─── */}
         <div className="md:col-span-6 flex flex-col items-center justify-center animate-in fade-in slide-in-from-right-4 duration-500">
           <div className="w-full max-w-[420px] space-y-6">
-            
+
             {/* White Rounded Card container */}
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-8 md:p-10 space-y-6">
-              
+
               {/* Blue top Lock Circle */}
               <div className="text-center">
                 <div className="h-14 w-14 rounded-full bg-blue-50/80 flex items-center justify-center text-blue-600 shadow-inner mx-auto mb-4 border border-blue-100/10">
                   <Lock className="h-5.5 w-5.5" fill="currentColor" fillOpacity="0.1" />
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight text-slate-800">Đăng nhập hệ thống</h2>
-                <p className="text-xs text-slate-400 mt-1.5 font-medium">Chào mừng bạn quay trở lại EduManage</p>
+                <p className="text-xs text-slate-400 mt-1.5 font-medium">Chào mừng bạn quay trở lại CinxManage</p>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                
+
                 {/* Error Banner */}
                 {loginMutation.isError && (
                   <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs text-destructive animate-in fade-in duration-300">

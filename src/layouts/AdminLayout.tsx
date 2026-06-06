@@ -14,11 +14,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/features/auth/store/useAuthStore"
-import { 
-  DropdownMenu, 
-  DropdownMenuTrigger, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
 import { UserService, notificationService } from "@/services"
@@ -88,7 +88,7 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-64 border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-          <span className="text-xl font-bold text-primary tracking-tight">EduManage</span>
+          <span className="text-xl font-bold text-primary tracking-tight">CinxManage</span>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1.5 px-4">

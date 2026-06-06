@@ -1,5 +1,12 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/features/auth/store/useAuthStore'
+import { showErrorToast } from '@/utils/errorHandler'
+
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipToast?: boolean
+  }
+}
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.shiny.id.vn'
 
@@ -53,7 +60,10 @@ api.interceptors.response.use(
       _retry?: boolean
     }
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response?.status !== 401 || originalRequest?._retry) {
+      if (!originalRequest?.skipToast) {
+        showErrorToast(error)
+      }
       return Promise.reject(error)
     }
 
@@ -100,6 +110,9 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null)
       clearTokens()
+      if (!originalRequest?.skipToast) {
+        showErrorToast(refreshError)
+      }
       window.location.href = '/login'
       return Promise.reject(refreshError)
     } finally {

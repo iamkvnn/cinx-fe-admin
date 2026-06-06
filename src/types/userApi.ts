@@ -37,6 +37,10 @@ export interface UserDto {
   instructorVerifiedAt?: string;
 }
 
+export interface UpdatePreferredCategoriesRequest {
+  categoryIds: string[];
+}
+
 export interface DeviceTokenRequest {
   fcmToken: string;
   deviceInfo?: string;

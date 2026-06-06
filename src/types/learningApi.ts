@@ -120,16 +120,16 @@ export interface LearningActivityRequest {
 }
 
 export interface LearningPathItemRequest {
-    courseId?: string;
-    lessonId?: string;
+    courseId: string;
+    lessonId: string;
     orderIndex?: number;
     isSuggested?: boolean;
 }
 
 export interface LearningPathRequest {
-    title?: string;
+    title: string;
     description?: string;
-    items?: LearningPathItemRequest[];
+    items: LearningPathItemRequest[];
 }
 
 export interface LearningPathItemResponse {

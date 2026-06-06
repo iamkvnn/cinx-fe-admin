@@ -13,6 +13,7 @@ import type {
 import type {
   DeviceTokenRequest,
   PresignedUrlResponse,
+  UpdatePreferredCategoriesRequest,
   UpdateProfileRequest,
   UserDto,
   UserStatisticsOverviewResponse,
@@ -32,6 +33,12 @@ export const UserService = {
   /** Update user profile */
   async updateUser({ id, body }: { id: string; body: UpdateProfileRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<UserDto>> {
     const { data } = await api.put(`/api/v1/users/${id}`, body, config);
+    return data;
+  },
+
+  /** Update preferred categories */
+  async updatePreferredCategories({ body }: { body: UpdatePreferredCategoriesRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
+    const { data } = await api.put('/api/v1/users/me/preferred-categories', body, config);
     return data;
   },
 

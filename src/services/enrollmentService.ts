@@ -7,8 +7,11 @@ import type { AxiosRequestConfig } from 'axios';
 import { api } from '@/lib/axios';
 
 import type {
-  AdminOverviewResponse,
   ApiResponse,
+  PaginatedApiResponse,
+} from '@/types';
+import type {
+  AdminOverviewResponse,
   CheckEnrollmentStatus,
   CourseResponse,
   CourseStatisticsResponse,
@@ -19,7 +22,6 @@ import type {
   InstructorStatisticsResponse,
   OrderDetailResponse,
   OrderResponse,
-  PaginatedApiResponse,
   UpdateVoucherRequest,
   UserEnrollmentSummaryResponse,
   VoucherResponse,

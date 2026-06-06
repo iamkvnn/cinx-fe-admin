@@ -1,0 +1,104 @@
+{
+  "services": [
+    {
+      "name": "auth",
+      "input": "https://api.shiny.id.vn/v3/api-docs/auth",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "auth.ts",
+      "serviceFilename": "authService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union",
+      "excludeTags": [
+        "presigned-url-controller"
+      ]
+    },
+    {
+      "name": "user",
+      "input": "https://api.shiny.id.vn/v3/api-docs/user",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "userApi.ts",
+      "serviceFilename": "userService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union"
+    },
+    {
+      "name": "course",
+      "input": "https://api.shiny.id.vn/v3/api-docs/course",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "courseApi.ts",
+      "serviceFilename": "courseService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union",
+      "excludeTags": [
+        "presigned-url-controller"
+      ]
+    },
+    {
+      "name": "learning",
+      "input": "https://api.shiny.id.vn/v3/api-docs/learning",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "learningApi.ts",
+      "serviceFilename": "learningService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union",
+      "excludeTags": [
+        "presigned-url-controller"
+      ]
+    },
+    {
+      "name": "enrollment",
+      "input": "https://api.shiny.id.vn/v3/api-docs/enrollment",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "enrollmentApi.ts",
+      "serviceFilename": "enrollmentService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union"
+    },
+    {
+      "name": "social",
+      "input": "https://api.shiny.id.vn/v3/api-docs/social",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "socialApi.ts",
+      "serviceFilename": "socialService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union"
+    }
+  ],
+  "watchInterval": 3000
+}
