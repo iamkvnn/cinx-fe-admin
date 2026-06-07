@@ -13,7 +13,7 @@ export function OAuthCallbackPage() {
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
 
   const loginWithGoogleMutation = useMutation({
-    mutationFn: (body: { code: string; codeVerifier: string; device: "WEB"; role: "ADMIN" }) =>
+    mutationFn: (body: { code: string; codeVerifier: string; role: "ADMIN"; redirectUri: string }) =>
       AuthService.loginWithGoogle({ body }),
     onSuccess: (res) => {
       if (res.success && res.data) {
@@ -55,8 +55,8 @@ export function OAuthCallbackPage() {
     loginWithGoogleMutation.mutate({
       code,
       codeVerifier,
-      device: "WEB",
-      role: "ADMIN"
+      role: "ADMIN",
+      redirectUri: window.location.origin + '/oauth2/callback',
     })
   }, [searchParams])
 

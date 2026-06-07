@@ -6,61 +6,61 @@
 // ── Domain types ───────────────────────────────────────────────
 
 export interface BanUserRequest {
-    reasonType: "SPAM" | "NEGATIVE_WORDS" | "INSULT" | "POLICY_ABUSE";
-    details: string;
-    durationDays?: number;
+  reasonType: "SPAM" | "NEGATIVE_WORDS" | "INSULT" | "POLICY_ABUSE";
+  details: string;
+  durationDays?: number;
 }
 
 export interface VerifyEmailRequest {
-    email: string;
-    otp: string;
+  email: string;
+  otp: string;
 }
 
 export interface SendOtpRequest {
-    email: string;
+  email: string;
 }
 
 export interface ResetPasswordRequest {
-    email: string;
-    otp: string;
-    newPassword: string;
+  email: string;
+  otp: string;
+  newPassword: string;
 }
 
 export interface RegisterRequest {
-    name: string;
-    email: string;
-    password: string;
-    role?: "USER" | "INSTRUCTOR" | "ADMIN";
-    gender?: "MALE" | "FEMALE";
-    phoneNumber?: string;
-    bio?: string;
-    cvFileKey?: string;
+  name: string;
+  email: string;
+  password: string;
+  role?: "USER" | "INSTRUCTOR" | "ADMIN";
+  gender?: "MALE" | "FEMALE";
+  phoneNumber?: string;
+  bio?: string;
+  cvFileKey?: string;
 }
 
 export interface RefreshTokenRequest {
-    token: string;
+  token: string;
 }
 
 export interface TokenResponseDto {
-    accessToken?: string;
-    refreshToken?: string;
+  accessToken?: string;
+  refreshToken?: string;
 }
 
 export interface AuthRequestDto {
-    email: string;
-    password: string;
-    role?: "USER" | "INSTRUCTOR" | "ADMIN";
+  email: string;
+  password: string;
+  role?: "USER" | "INSTRUCTOR" | "ADMIN";
 }
 
 export interface OAuthRequest {
-    code: string;
-    codeVerifier: string;
-    device?: "WEB" | "MOBILE";
-    role?: "USER" | "INSTRUCTOR" | "ADMIN";
+  code: string;
+  codeVerifier: string;
+  role: "USER" | "INSTRUCTOR" | "ADMIN";
+  redirectUri: string;
 }
 
 export interface ChangePasswordRequest {
-    email: string;
-    oldPassword: string;
-    newPassword: string;
+  email: string;
+  oldPassword: string;
+  newPassword: string;
 }
