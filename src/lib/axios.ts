@@ -8,7 +8,7 @@ declare module 'axios' {
   }
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090'
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.shiny.id.vn'
 
 // ─── Main axios instance ────────────────────────────────────────────────────
 export const api = axios.create({
