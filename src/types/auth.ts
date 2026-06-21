@@ -49,7 +49,7 @@ export interface TokenResponseDto {
 export interface AuthRequestDto {
   email: string;
   password: string;
-  role?: "USER" | "INSTRUCTOR" | "ADMIN";
+  role: "USER" | "INSTRUCTOR" | "ADMIN";
 }
 
 export interface OAuthRequest {

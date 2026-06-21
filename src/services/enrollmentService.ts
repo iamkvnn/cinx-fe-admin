@@ -21,7 +21,7 @@ import type {
   InstructorRevenueResponse,
   InstructorStatisticsResponse,
   OrderDetailResponse,
-  OrderResponse,
+  UpdatePaymentMethodRequest,
   UpdateVoucherRequest,
   UserEnrollmentSummaryResponse,
   VoucherResponse,
@@ -66,6 +66,11 @@ export const VoucherService = {
 // ── OrderService ──────────────────────────────────────────────
 export const OrderService = {
 
+  async updatePaymentMethod({ orderId, body }: { orderId: string; body: UpdatePaymentMethodRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<OrderDetailResponse>> {
+    const { data } = await api.put(`/api/v1/orders/${orderId}/payment-method`, body, config);
+    return data;
+  },
+
   async cancelOrder({ orderId }: { orderId: string }, config?: AxiosRequestConfig): Promise<ApiResponse<OrderDetailResponse>> {
     const { data } = await api.put(`/api/v1/orders/${orderId}/cancel`, undefined, config);
     return data;
@@ -76,7 +81,7 @@ export const OrderService = {
     return data;
   },
 
-  async createOrder({ body }: { body: CreateOrderRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<OrderResponse>> {
+  async createOrder({ body }: { body: CreateOrderRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<OrderDetailResponse>> {
     const { data } = await api.post('/api/v1/orders', body, config);
     return data;
   },

@@ -9,7 +9,7 @@ export interface UpdateCourseRequest {
   title?: string;
   description?: string;
   categoryId: string;
-  price?: number;
+  price: number;
   discountedPrice?: number;
   isInSubscription?: boolean;
   duration?: number;
@@ -113,13 +113,20 @@ export interface SubtitleTrackResponse {
   displayName?: string;
   fileUrl?: string;
   fileKey?: string;
+  wordConfidenceFileKey?: string;
+  wordConfidenceFileUrl?: string;
   fileName?: string;
   fileType?: string;
   fileSize?: number;
   format?: "VTT" | "SRT";
-  source?: "MANUAL" | "AI_GENERATED" | "AI_EDITED";
+  source?: "MANUAL" | "AI_GENERATED" | "AI_TRANSLATED" | "AI_EDITED";
   status?: "READY" | "PROCESSING" | "FAILED";
   isDefault?: boolean;
+}
+
+export interface UpdateSubtitleContentRequest {
+  content: string;
+  displayName?: string;
 }
 
 export interface UpdateVideoOptionRequest {
@@ -203,7 +210,10 @@ export interface UpdateAssignmentLessonRequest {
 }
 
 export interface UpdateArticleLessonRequest {
-  content: string;
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
 }
 
 export interface UpdateCourseImageRequest {
@@ -258,6 +268,31 @@ export interface CreateSubtitleTrackRequest {
   isDefault?: boolean;
 }
 
+export interface TranslateSubtitleJobRequest {
+  sourceSubtitleId?: string;
+  targetLanguageCodes: string[];
+}
+
+export interface SubtitleJobResponse {
+  id?: string;
+  jobType?: "GENERATE_DEFAULT" | "TRANSLATE";
+  status?: "QUEUED" | "PROCESSING" | "SUCCEEDED" | "FAILED";
+  sourceSubtitleId?: string;
+  outputSubtitleId?: string;
+  sourceLanguageCode?: string;
+  targetLanguageCode?: string;
+  displayName?: string;
+  expectedOutputFileKey?: string;
+  progressPercent?: number;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+export interface GenerateDefaultSubtitleJobRequest {
+  languageCode?: string;
+  displayName?: string;
+}
+
 export interface CreateVideoOptionRequest {
   optionText: string;
   isCorrect: boolean;
@@ -307,7 +342,10 @@ export interface CreateAssignmentLessonRequest {
 }
 
 export interface CreateArticleLessonRequest {
-  content: string;
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
 }
 
 export interface CreateCourseImageRequest {
@@ -381,6 +419,23 @@ export interface VideoLessonResponse {
   subtitles?: SubtitleTrackResponse[];
 }
 
+export interface SubtitleWordConfidenceItem {
+  word?: string;
+  start?: number;
+  end?: number;
+  probability?: number;
+}
+
+export interface SubtitleWordConfidenceResponse {
+  subtitleId?: string;
+  words?: SubtitleWordConfidenceItem[];
+}
+
+export interface SubtitleContentResponse {
+  subtitleId?: string;
+  content?: string;
+}
+
 export interface QuizLessonResponse {
   lessonId?: string;
   numberOfQuestionPerQuizSession?: number;
@@ -409,7 +464,10 @@ export interface AssignmentLessonResponse {
 }
 
 export interface ArticleLessonResponse {
-  content?: string;
+  articleUrl?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
 }
 
 export interface InstructorCourseStatisticsOverviewResponse {

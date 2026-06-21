@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { AdminCourseService } from "@/services"
+import { AdminCourseService, CourseService } from "@/services"
 import { CourseApprovalActions } from "../components/CourseApprovalActions"
 import { StatusBadge, getCourseDisplayStatus } from "../components/StatusBadge"
 
@@ -37,7 +37,7 @@ export function CourseDetailPage() {
   // 1. DRAFT COURSE INFO (Current/Latest)
   const { data: draftCourseData, isLoading: isLoadingDraft } = useQuery({
     queryKey: ['course-admin', id],
-    queryFn: () => AdminCourseService.getCourseDraft_1({ id: id as string }),
+    queryFn: () => CourseService.getEditableCourseDraft({ id: id as string }, { skipToast: true }),
     enabled: !!id
   })
 
@@ -46,7 +46,7 @@ export function CourseDetailPage() {
     queryKey: ['course-published', id],
     queryFn: async () => {
       try {
-        return await AdminCourseService.getCourseById_2({ id: id as string })
+        return await CourseService.getReadableCourseById({ id: id as string }, { skipToast: true })
       } catch (e: any) {
         if (e?.response?.status === 404) return null
         throw e
@@ -61,7 +61,7 @@ export function CourseDetailPage() {
     queryKey: ['course-curriculum-draft', id],
     queryFn: async () => {
       try {
-        const res = await AdminCourseService.getDraftCurriculum_1({ id: id as string })
+        const res = await CourseService.getEditableDraftCurriculum({ id: id as string }, { skipToast: true })
         return res
       } catch (e: any) {
         if (e?.response?.status === 404) return { data: { sections: [] } }
@@ -76,7 +76,7 @@ export function CourseDetailPage() {
     queryKey: ['course-curriculum-published', id],
     queryFn: async () => {
       try {
-        return await AdminCourseService.getCourseCurriculum({ id: id as string })
+        return await CourseService.getReadableCurriculum({ id: id as string }, { skipToast: true })
       } catch (e: any) {
         if (e?.response?.status === 404) return null
         throw e
