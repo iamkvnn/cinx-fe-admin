@@ -94,6 +94,12 @@ export interface CheckEnrollmentStatus {
   isEnrolled?: boolean;
 }
 
+export interface CourseRevenueStats {
+  courseId?: string;
+  title?: string;
+  revenue?: number;
+}
+
 export interface CourseStats {
   courseId?: string;
   title?: string;
@@ -112,7 +118,7 @@ export interface InstructorStatisticsResponse {
   distinctLearnersInRange?: number;
   revenueByTime?: RevenueByTimeResponse[];
   enrollmentsByTime?: EnrollmentByTimeResponse[];
-  topCoursesByRevenue?: CourseStats[];
+  topCoursesByRevenue?: CourseRevenueStats[];
   topCoursesByEnrollment?: CourseStats[];
 }
 
@@ -145,7 +151,7 @@ export interface AdminOverviewResponse {
   distinctLearnersInRange?: number;
   platformRevenueByTime?: RevenueByTimeResponse[];
   enrollmentsByTime?: EnrollmentByTimeResponse[];
-  topCoursesByRevenue?: CourseStats[];
+  topCoursesByRevenue?: CourseRevenueStats[];
   topCoursesByEnrollment?: CourseStats[];
 }
 

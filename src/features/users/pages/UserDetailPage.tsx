@@ -54,7 +54,7 @@ export function UserDetailPage() {
   // Extract real courses from user's orders
   const userCourses = React.useMemo(() => {
     if (!ordersData?.data || !Array.isArray(ordersData.data)) return []
-    
+
     const coursesMap = new Map<string, any>()
     ordersData.data.forEach((order: any) => {
       // Check if order belongs to the user and is PAID
@@ -80,12 +80,41 @@ export function UserDetailPage() {
   const learningSummary = learningSummaryData?.data
 
   // Format activity chart data
-  const formattedActivity = activityData?.data && Array.isArray(activityData.data)
-    ? activityData.data.map((item: any) => ({
-        month: item.timeLabel || "",
-        hours: Math.round((item.activeSeconds || 0) / 3600 * 10) / 10
-      }))
-    : []
+  const formattedActivity = React.useMemo(() => {
+    const last12Months: { month: string; hours: number }[] = []
+    const now = new Date()
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const label = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+      last12Months.push({ month: label, hours: 0 })
+    }
+
+    if (activityData?.data && Array.isArray(activityData.data)) {
+      activityData.data.forEach((item: any) => {
+        if (!item) return
+        const rawLabel = item.timeLabel || ""
+        let monthKey = ""
+        if (rawLabel.includes("-")) {
+          const parts = rawLabel.split("-")
+          if (parts.length >= 2) {
+            monthKey = `${parts[1].padStart(2, '0')}/${parts[0]}`
+          }
+        } else if (rawLabel.includes("/")) {
+          const parts = rawLabel.split("/")
+          if (parts.length >= 2) {
+            monthKey = `${parts[0].padStart(2, '0')}/${parts[1]}`
+          }
+        }
+        
+        const existing = last12Months.find(m => m.month === monthKey || m.month === rawLabel)
+        const hours = Math.round((item.activeSeconds || 0) / 3600 * 10) / 10
+        if (existing) {
+          existing.hours = hours
+        }
+      })
+    }
+    return last12Months
+  }, [activityData])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value)
@@ -190,7 +219,7 @@ export function UserDetailPage() {
             <div>
               <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 {user.name}
-                <Badge variant={user.status === 'ACTIVE' ? 'default' : 'secondary'} 
+                <Badge variant={user.status === 'ACTIVE' ? 'default' : 'secondary'}
                   className={user.status === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600 text-[10px] h-5' : user.status === 'BANNED' ? 'bg-red-500 hover:bg-red-600 text-[10px] h-5' : 'text-[10px] h-5'}>
                   {user.status === 'ACTIVE' ? 'Hoạt động' : user.status === 'BANNED' ? 'Đã khóa' : user.status}
                 </Badge>
@@ -220,7 +249,7 @@ export function UserDetailPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <div className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-full">
@@ -287,7 +316,7 @@ export function UserDetailPage() {
           <TabsTrigger value="courses">Khóa học đã mua</TabsTrigger>
           <TabsTrigger value="activity">Hoạt động học tập</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="courses" className="outline-none">
           <Card>
             <CardHeader>
@@ -334,48 +363,57 @@ export function UserDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="activity" className="outline-none">
           <Card>
             <CardHeader>
               <CardTitle>Biểu đồ thời gian học tập</CardTitle>
-              <CardDescription>Tổng số giờ học viên đã dành ra để học trong 6 tháng qua.</CardDescription>
+              <CardDescription>Tổng số giờ học viên đã dành ra để học trong 12 tháng qua.</CardDescription>
             </CardHeader>
             <CardContent>
-              {formattedActivity.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">Không có dữ liệu hoạt động học tập.</div>
-              ) : (
-                <div className="h-[350px] w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={formattedActivity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} 
-                        dy={10}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <RechartsTooltip 
-                        cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Bar 
-                        dataKey="hours" 
-                        fill="hsl(var(--primary))" 
-                        radius={[4, 4, 0, 0]} 
-                        barSize={40}
-                        name="Giờ học"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+              {!activityData?.data || activityData.data.length === 0 ? (
+                <div className="text-center py-3 bg-muted/40 rounded-md border border-dashed text-sm text-muted-foreground mb-4">
+                  Học viên chưa có hoạt động học tập thực tế. Dưới đây là biểu đồ thời gian học mặc định (0 giờ).
                 </div>
-              )}
+              ) : null}
+              <div className="h-[350px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={formattedActivity} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    />
+                    <RechartsTooltip
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--popover))',
+                        borderColor: 'hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                    />
+                    <Bar
+                      dataKey="hours"
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                      barSize={40}
+                      name="Giờ học"
+                      minPointSize={4}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

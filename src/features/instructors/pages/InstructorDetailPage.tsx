@@ -1,3 +1,4 @@
+import * as React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, BookOpen, Users, Star, DollarSign, TrendingUp } from "lucide-react"
@@ -58,12 +59,41 @@ export function InstructorDetailPage() {
   }
 
   // Format revenue chart data
-  const formattedRevenueData = revenueAnalytics?.revenueByMonth && Array.isArray(revenueAnalytics.revenueByMonth)
-    ? revenueAnalytics.revenueByMonth.map((item: any) => ({
-        month: item.timeLabel || "",
-        revenue: item.grossRevenue || 0
-      }))
-    : []
+  const formattedRevenueData = React.useMemo(() => {
+    const last12Months: { month: string; revenue: number }[] = []
+    const now = new Date()
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const label = `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+      last12Months.push({ month: label, revenue: 0 })
+    }
+
+    if (revenueAnalytics?.revenueByMonth && Array.isArray(revenueAnalytics.revenueByMonth)) {
+      revenueAnalytics.revenueByMonth.forEach((item: any) => {
+        if (!item) return
+        const rawLabel = item.timeLabel || ""
+        let monthKey = ""
+        if (rawLabel.includes("-")) {
+          const parts = rawLabel.split("-")
+          if (parts.length >= 2) {
+            monthKey = `${parts[1].padStart(2, '0')}/${parts[0]}`
+          }
+        } else if (rawLabel.includes("/")) {
+          const parts = rawLabel.split("/")
+          if (parts.length >= 2) {
+            monthKey = `${parts[0].padStart(2, '0')}/${parts[1]}`
+          }
+        }
+        
+        const existing = last12Months.find(m => m.month === monthKey || m.month === rawLabel)
+        const revenue = item.grossRevenue || 0
+        if (existing) {
+          existing.revenue = revenue
+        }
+      })
+    }
+    return last12Months
+  }, [revenueAnalytics])
 
   const isAnyLoading = isLoadingInstructor || isLoadingSummary || isLoadingRevenue || isLoadingCourses
 
@@ -164,7 +194,7 @@ export function InstructorDetailPage() {
             <div>
               <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 {instructor.name}
-                <Badge variant={instructor.status === 'ACTIVE' ? 'default' : 'secondary'} 
+                <Badge variant={instructor.status === 'ACTIVE' ? 'default' : 'secondary'}
                   className={instructor.status === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600 text-[10px] h-5' : 'text-[10px] h-5'}>
                   {instructor.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}
                 </Badge>
@@ -203,7 +233,7 @@ export function InstructorDetailPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <div className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-full">
@@ -265,7 +295,7 @@ export function InstructorDetailPage() {
           <TabsTrigger value="overview">Khóa học của Giảng viên</TabsTrigger>
           <TabsTrigger value="revenue">Phân tích Doanh thu</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview" className="outline-none">
           <Card>
             <CardHeader>
@@ -331,57 +361,65 @@ export function InstructorDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="revenue" className="outline-none">
           <Card>
             <CardHeader>
-              <CardTitle>Biểu đồ Doanh thu (6 tháng gần nhất)</CardTitle>
+              <CardTitle>Biểu đồ Doanh thu (12 tháng gần nhất)</CardTitle>
               <CardDescription>Biến động doanh thu đem lại từ các khóa học của giảng viên.</CardDescription>
             </CardHeader>
             <CardContent>
-              {formattedRevenueData.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">Không có dữ liệu doanh thu.</div>
-              ) : (
-                <div className="h-[350px] w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={formattedRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} 
-                        dy={10}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tickFormatter={(value) => `${value / 1000000}M`}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      />
-                      <RechartsTooltip 
-                        formatter={(value: any) => [formatCurrency(Number(value)), "Doanh thu"]}
-                        cursor={{ stroke: 'rgba(0, 0, 0, 0.2)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="revenue" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={3}
-                        fillOpacity={1} 
-                        fill="url(#colorRevenue)" 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+              {!revenueAnalytics?.revenueByMonth || revenueAnalytics.revenueByMonth.length === 0 ? (
+                <div className="text-center py-3 bg-muted/40 rounded-md border border-dashed text-sm text-muted-foreground mb-4">
+                  Giảng viên chưa phát sinh doanh thu. Dưới đây là biểu đồ doanh thu mặc định (0 ₫).
                 </div>
-              )}
+              ) : null}
+              <div className="h-[350px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={formattedRevenueData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(value) => `${value / 1000000}M`}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    />
+                    <RechartsTooltip
+                      formatter={(value: any) => [formatCurrency(Number(value)), "Doanh thu"]}
+                      cursor={{ stroke: 'rgba(0, 0, 0, 0.2)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--popover))',
+                        borderColor: 'hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                      labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

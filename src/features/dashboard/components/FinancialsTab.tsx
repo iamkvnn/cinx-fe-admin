@@ -1,6 +1,6 @@
 import { ShoppingBag, Award, Activity, Users } from "lucide-react"
-import { 
-  Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis 
+import {
+  Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
@@ -22,7 +22,7 @@ interface FinancialsTabProps {
     topCoursesByRevenue?: Array<{
       courseId?: string
       title?: string
-      enrollmentCount?: number
+      revenue?: number
     }>
   }
   revenueChartData: Array<{
@@ -100,11 +100,11 @@ export function FinancialsTab({
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <AreaChart data={revenueChartData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                   <defs>
                     <linearGradient id="grossColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="netColor" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="oklch(0.685 0.169 237.323)" stopOpacity={0.3} />
@@ -114,9 +114,19 @@ export function FinancialsTab({
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `${val / 1000000}M`} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <Tooltip formatter={(val: any) => [formatCurrency(Number(val)), ""]} contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
+                  <Tooltip
+                    formatter={(val: any) => [formatCurrency(Number(val)), ""]}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      borderColor: 'hsl(var(--border))',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                  />
                   <Legend verticalAlign="top" height={36} iconType="circle" />
-                  <Area type="monotone" dataKey="Doanh thu gộp" stroke="hsl(var(--primary))" strokeWidth={2.5} fillOpacity={1} fill="url(#grossColor)" />
+                  <Area type="monotone" dataKey="Doanh thu gộp" stroke="var(--primary)" strokeWidth={2.5} fillOpacity={1} fill="url(#grossColor)" />
                   <Area type="monotone" dataKey="Phí hệ thống" stroke="oklch(0.685 0.169 237.323)" strokeWidth={2.5} fillOpacity={1} fill="url(#netColor)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -144,7 +154,7 @@ export function FinancialsTab({
                         {course.title}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {course.enrollmentCount} lượt mua
+                        {formatCurrency(Number(course.revenue))}
                       </p>
                     </div>
                   </div>

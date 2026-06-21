@@ -90,6 +90,12 @@ export const OrderService = {
     const { data } = await api.get(`/api/v1/orders/${orderId}`, config);
     return data;
   },
+
+  /** Get orders by user id for admin */
+  async getOrdersByUserIdForAdmin({ userId, page, size, query, sort }: { userId: string; page?: number; size?: number; query?: string; sort?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<OrderDetailResponse>> {
+    const { data } = await api.get(`/api/v1/orders/admin/users/${userId}`, { params: { page, size, query, sort }, ...config });
+    return data;
+  },
 };
 
 // ── EnrollmentService ──────────────────────────────────────────────

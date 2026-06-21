@@ -77,12 +77,22 @@ export function UsersTab({
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={userChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <LineChart data={userChartData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <Tooltip formatter={(val) => [formatNumber(Number(val)), "Tài khoản mới"]} contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
-                  <Line type="monotone" dataKey="Học viên mới" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  <Tooltip
+                    formatter={(val) => [formatNumber(Number(val)), "Tài khoản mới"]}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      borderColor: 'hsl(var(--border))',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                  />
+                  <Line type="monotone" dataKey="Học viên mới" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}

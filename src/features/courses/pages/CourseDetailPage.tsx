@@ -35,14 +35,22 @@ export function CourseDetailPage() {
   const [showDiff, setShowDiff] = React.useState(false)
 
   // 1. DRAFT COURSE INFO (Current/Latest)
-  const { data: draftCourseData, isLoading: isLoadingDraft } = useQuery({
+  const draftCourseQuery = useQuery({
     queryKey: ['course-admin', id],
-    queryFn: () => CourseService.getEditableCourseDraft({ id: id as string }, { skipToast: true }),
-    enabled: !!id
+    queryFn: async () => {
+      try {
+        return await CourseService.getEditableCourseDraft({ id: id as string }, { skipToast: true })
+      } catch (e: any) {
+        if (e?.response?.status === 404) return null
+        throw e
+      }
+    },
+    enabled: !!id,
+    retry: false
   })
 
   // 2. PUBLISHED COURSE INFO (Old)
-  const { data: publishedCourseData } = useQuery({
+  const publishedCourseQuery = useQuery({
     queryKey: ['course-published', id],
     queryFn: async () => {
       try {
@@ -56,23 +64,25 @@ export function CourseDetailPage() {
     retry: false
   })
 
+  const draftCourse = draftCourseQuery.data?.data
+  const publishedCourse = publishedCourseQuery.data?.data || null
+
   // 3. DRAFT CURRICULUM
-  const { data: draftCurriculumData } = useQuery({
+  const draftCurriculumQuery = useQuery({
     queryKey: ['course-curriculum-draft', id],
     queryFn: async () => {
       try {
-        const res = await CourseService.getEditableDraftCurriculum({ id: id as string }, { skipToast: true })
-        return res
+        return await CourseService.getEditableDraftCurriculum({ id: id as string }, { skipToast: true })
       } catch (e: any) {
         if (e?.response?.status === 404) return { data: { sections: [] } }
         throw e
       }
     },
-    enabled: !!id
+    enabled: !!id && !!draftCourse && draftCourse.publishStatus === 'WAITING_APPROVAL'
   })
 
   // 4. PUBLISHED CURRICULUM
-  const { data: publishedCurriculumData } = useQuery({
+  const publishedCurriculumQuery = useQuery({
     queryKey: ['course-curriculum-published', id],
     queryFn: async () => {
       try {
@@ -82,7 +92,7 @@ export function CourseDetailPage() {
         throw e
       }
     },
-    enabled: !!id,
+    enabled: !!id && !!publishedCourse,
     retry: false
   })
 
@@ -103,15 +113,23 @@ export function CourseDetailPage() {
     }
   })
 
-  if (isLoadingDraft) return <div className="p-8 text-center">Đang tải...</div>
+  const isLoading =
+    draftCourseQuery.isLoading ||
+    publishedCourseQuery.isLoading ||
+    (!!draftCourse && draftCourse.publishStatus === 'WAITING_APPROVAL' && draftCurriculumQuery.isLoading) ||
+    (!!publishedCourse && publishedCurriculumQuery.isLoading)
 
-  // Base data is the Draft
-  const course = draftCourseData?.data
+  if (isLoading) return <div className="p-8 text-center">Đang tải...</div>
+
+  // Base course to display: use draft if waiting approval, otherwise published, otherwise draft as last resort
+  const course = (draftCourse && draftCourse.publishStatus === 'WAITING_APPROVAL')
+    ? draftCourse
+    : (publishedCourse || draftCourse)
+
   if (!course) return <div className="p-8 text-center">Không tìm thấy khóa học</div>
 
-  const publishedCourse = publishedCourseData?.data || null
-  const draftCurriculum = draftCurriculumData?.data?.sections || []
-  const publishedCurriculum = (publishedCurriculumData as any)?.data?.sections || []
+  const draftCurriculum = draftCurriculumQuery.data?.data?.sections || []
+  const publishedCurriculum = (publishedCurriculumQuery.data as any)?.data?.sections || []
 
   // Derived state to know if this is an update vs new
   // If the status is WAITING_APPROVAL and we DO have a published version -> it's an Update!

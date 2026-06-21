@@ -84,11 +84,21 @@ export function CoursesTab({
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={enrollmentChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <BarChart data={enrollmentChartData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <Tooltip formatter={(val) => [formatNumber(Number(val)), "Đăng ký"]} contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
+                  <Tooltip
+                    formatter={(val) => [formatNumber(Number(val)), "Đăng ký"]}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      borderColor: 'hsl(var(--border))',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                  />
                   <Bar dataKey="Lượt đăng ký" fill="oklch(0.685 0.169 237.323)" radius={[4, 4, 0, 0]} barSize={35} />
                 </BarChart>
               </ResponsiveContainer>
@@ -140,12 +150,22 @@ export function CoursesTab({
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={courseChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <BarChart data={courseChartData} margin={{ top: 20, right: 20, left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <Tooltip formatter={(val) => [formatNumber(Number(val)), "Khóa học"]} contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="Khóa học mới" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={35} />
+                  <Tooltip
+                    formatter={(val) => [formatNumber(Number(val)), "Khóa học"]}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--popover))',
+                      borderColor: 'hsl(var(--border))',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
+                    itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                  />
+                  <Bar dataKey="Khóa học mới" fill="var(--primary)" radius={[4, 4, 0, 0]} barSize={35} />
                 </BarChart>
               </ResponsiveContainer>
             )}
