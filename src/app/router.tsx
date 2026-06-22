@@ -16,6 +16,7 @@ import { InstructorDetailPage } from '@/features/instructors/pages/InstructorDet
 import { CouponsPage } from '@/features/vouchers/pages/CouponsPage'
 import { NotificationsPage } from '@/features/notifications/pages/NotificationsPage'
 import { ReportsPage } from '@/features/reports/pages/ReportsPage'
+import { PoliciesPage } from '@/features/policies/pages/PoliciesPage'
 
 export const router = createBrowserRouter([
   // ─── Public routes ────────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
           { path: 'coupons', element: <CouponsPage /> },
           { path: 'notifications', element: <NotificationsPage /> },
           { path: 'reports', element: <ReportsPage /> },
+          { path: 'policies', element: <PoliciesPage /> },
         ],
       },
     ],

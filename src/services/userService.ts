@@ -11,8 +11,12 @@ import type {
   PaginatedApiResponse,
 } from '@/types';
 import type {
+  CreatePolicyRequest,
   DeviceTokenRequest,
+  PolicyDetailResponse,
+  PolicySummaryResponse,
   PresignedUrlResponse,
+  UpdatePolicyRequest,
   UpdatePreferredCategoriesRequest,
   UpdateProfileRequest,
   UserDto,
@@ -48,6 +52,12 @@ export const UserService = {
     return data;
   },
 
+  /** Terminate partnership with instructor (admin) */
+  async terminatePartnership({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
+    const { data } = await api.post(`/api/v1/users/${id}/terminate-partnership`, undefined, config);
+    return data;
+  },
+
   /** Reject instructor (admin) */
   async rejectInstructor({ id, reason }: { id: string; reason: string }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
     const { data } = await api.post(`/api/v1/users/${id}/reject-instructor`, undefined, { params: { reason }, ...config });
@@ -69,6 +79,56 @@ export const UserService = {
   /** Get current user profile */
   async getCurrentUser(config?: AxiosRequestConfig): Promise<ApiResponse<UserDto>> {
     const { data } = await api.get('/api/v1/users/me', config);
+    return data;
+  },
+};
+
+// ── PolicyService ──────────────────────────────────────────────
+export const PolicyService = {
+
+  /** Update policy draft */
+  async updatePolicyDraft({ id, body }: { id: string; body: UpdatePolicyRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<PolicyDetailResponse>> {
+    const { data } = await api.put(`/api/v1/policies/${id}`, body, config);
+    return data;
+  },
+
+  async getPublishedPolicies(config?: AxiosRequestConfig): Promise<ApiResponse<PolicySummaryResponse[]>> {
+    const { data } = await api.get('/api/v1/policies', config);
+    return data;
+  },
+
+  /** Create policy draft */
+  async createPolicyDraft({ body }: { body: CreatePolicyRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<PolicyDetailResponse>> {
+    const { data } = await api.post('/api/v1/policies', body, config);
+    return data;
+  },
+
+  /** Publish policy draft */
+  async publishPolicy({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<PolicyDetailResponse>> {
+    const { data } = await api.post(`/api/v1/policies/${id}/publish`, undefined, config);
+    return data;
+  },
+
+  /** Archive policy */
+  async archivePolicy({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<PolicyDetailResponse>> {
+    const { data } = await api.post(`/api/v1/policies/${id}/archive`, undefined, config);
+    return data;
+  },
+
+  async getPublishedPolicy({ slug }: { slug: string }, config?: AxiosRequestConfig): Promise<ApiResponse<PolicyDetailResponse>> {
+    const { data } = await api.get(`/api/v1/policies/${slug}`, config);
+    return data;
+  },
+
+  /** List policy versions */
+  async getPolicyVersions({ page, size, status, policyType, query, sort }: { page?: number; size?: number; status?: string; policyType?: string; query?: string; sort?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<PolicySummaryResponse>> {
+    const { data } = await api.get('/api/v1/policies/versions', { params: { page, size, status, policyType, query, sort }, ...config });
+    return data;
+  },
+
+  /** Get policy detail by ID (admin) */
+  async getPolicyDetail({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<PolicyDetailResponse>> {
+    const { data } = await api.get(`/api/v1/policies/detail/${id}`, config);
     return data;
   },
 };

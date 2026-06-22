@@ -10,10 +10,12 @@ import {
   Bell,
   LogOut,
   User,
+  Shield,
 } from "lucide-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/features/auth/store/useAuthStore"
+import { useNotificationWebSocket } from "@/hooks/useNotificationWebSocket"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,7 +23,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
-import { UserService, notificationService } from "@/services"
+import { UserService, NotificationService } from "@/services"
+import type { UserNotificationResponse } from "@/types"
+import { Badge } from "@/components/ui/badge"
+import { getNotificationFrontendUrl, getNotificationTypeLabel } from "@/utils/notificationHelper"
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -32,6 +37,7 @@ const navigation = [
   { name: 'Báo cáo', href: '/reports', icon: AlertTriangle },
   { name: 'Mã giảm giá', href: '/coupons', icon: Ticket },
   { name: 'Thông báo', href: '/notifications', icon: Bell },
+  { name: 'Chính sách', href: '/policies', icon: Shield },
   { name: 'Cá nhân', href: '/profile', icon: User },
 ]
 
@@ -39,6 +45,10 @@ export function AdminLayout() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const clearTokens = useAuthStore((state) => state.clearTokens)
+  const accessToken = useAuthStore((state) => state.accessToken)
+
+  // Listen for real-time notifications via WebSocket
+  useNotificationWebSocket(accessToken)
 
   const handleLogout = () => {
     clearTokens()
@@ -55,19 +65,19 @@ export function AdminLayout() {
   // Fetch unread count & recent notifications
   const { data: unreadData } = useQuery({
     queryKey: ["unread-count"],
-    queryFn: () => notificationService.countUnreadNotifications(),
+    queryFn: () => NotificationService.countUnreadNotifications(),
   })
   const unreadCount = unreadData?.data ?? 0
 
   const { data: notificationsData, isLoading: isLoadingNotifications } = useQuery({
     queryKey: ["header-notifications"],
-    queryFn: () => notificationService.getNotifications({ page: 1, size: 5 }),
+    queryFn: () => NotificationService.getNotifications({ page: 1, size: 5 }),
   })
   const notifications = notificationsData?.data ?? []
 
   // Mutations for notifications
   const toggleReadMutation = useMutation({
-    mutationFn: (notificationId: string) => notificationService.toggleRead(notificationId),
+    mutationFn: (notificationId: string) => NotificationService.toggleRead({ notificationId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["unread-count"] })
       queryClient.invalidateQueries({ queryKey: ["header-notifications"] })
@@ -75,12 +85,24 @@ export function AdminLayout() {
     },
   })
 
-  const handleNotificationClick = (notificationId: string) => {
-    toggleReadMutation.mutate(notificationId)
+  const handleNotificationClick = (n: any) => {
+    if (n.id) {
+      toggleReadMutation.mutate(n.id)
+    }
+    const url = getNotificationFrontendUrl(n)
+    if (url) {
+      if (url.startsWith("http")) {
+        window.open(url, "_blank")
+      } else {
+        navigate(url)
+      }
+    }
   }
 
   const markAllRead = () => {
-    notifications.filter(n => !n.isRead).forEach(n => n.id && toggleReadMutation.mutate(n.id))
+    (notifications as UserNotificationResponse[])
+      .filter((n: UserNotificationResponse) => !n.isRead)
+      .forEach((n: UserNotificationResponse) => n.id && toggleReadMutation.mutate(n.id))
   }
 
   return (
@@ -144,26 +166,32 @@ export function AdminLayout() {
                   <div className="p-4 text-center text-xs text-muted-foreground">Không có thông báo mới</div>
                 ) : (
                   <div className="py-1 max-h-72 overflow-y-auto">
-                    {notifications.map((n) => (
-                      <DropdownMenuItem
-                        key={n.id}
-                        onClick={() => n.id && handleNotificationClick(n.id)}
-                        className={cn(
-                          "flex flex-col items-start gap-1 p-2.5 rounded-xl text-left cursor-pointer transition-colors border-b border-border/20 last:border-0",
-                          !n.isRead ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-accent"
-                        )}
-                      >
-                        <div className="flex items-center gap-1.5 w-full">
-                          {!n.isRead && <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 animate-pulse" />}
-                          <span className={cn("text-xs font-semibold truncate", !n.isRead ? "text-foreground" : "text-muted-foreground")}>
-                            {n.title}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 pl-3">
-                          {n.message}
-                        </p>
-                      </DropdownMenuItem>
-                    ))}
+                    {notifications.map((n) => {
+                      const typeInfo = getNotificationTypeLabel(n.type)
+                      return (
+                        <DropdownMenuItem
+                          key={n.id}
+                          onClick={() => handleNotificationClick(n)}
+                          className={cn(
+                            "flex flex-col items-start gap-1 p-2.5 rounded-xl text-left cursor-pointer transition-colors border-b border-border/20 last:border-0",
+                            !n.isRead ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-accent"
+                          )}
+                        >
+                          <div className="flex items-center gap-1.5 w-full">
+                            {!n.isRead && <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 animate-pulse" />}
+                            <span className={cn("text-xs font-semibold truncate max-w-[140px]", !n.isRead ? "text-foreground" : "text-muted-foreground")}>
+                              {n.title}
+                            </span>
+                            <Badge className={cn("text-[9px] px-1 py-0 h-4 ml-auto font-normal", typeInfo.color)} variant="outline">
+                              {typeInfo.label}
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 pl-3">
+                            {n.message}
+                          </p>
+                        </DropdownMenuItem>
+                      )
+                    })}
                   </div>
                 )}
                 <DropdownMenuSeparator />

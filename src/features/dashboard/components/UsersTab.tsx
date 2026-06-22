@@ -41,7 +41,7 @@ export function UsersTab({
             <div>
               <p className="text-xs text-muted-foreground font-medium">Giảng viên đã duyệt</p>
               <h4 className="text-xl font-bold mt-1">
-                {formatNumber(userOverview?.instructorsByVerificationStatus?.VERIFIED)}
+                {formatNumber(userOverview?.instructorsByVerificationStatus?.verified)}
               </h4>
             </div>
             <div className="p-2 bg-green-50 dark:bg-green-900/10 text-green-600 rounded-full">
@@ -54,7 +54,7 @@ export function UsersTab({
             <div>
               <p className="text-xs text-muted-foreground font-medium">Giảng viên chờ duyệt</p>
               <h4 className="text-xl font-bold mt-1">
-                {formatNumber(userOverview?.instructorsByVerificationStatus?.PENDING)}
+                {formatNumber(userOverview?.instructorsByVerificationStatus?.unverified)}
               </h4>
             </div>
             <div className="p-2 bg-red-50 dark:bg-red-900/10 text-red-600 rounded-full">
@@ -120,43 +120,6 @@ export function UsersTab({
                         </div>
                         <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                           <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    )
-                  })
-                })()
-              )}
-            </div>
-
-            <div className="space-y-3 pt-4 border-t">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Trạng thái hồ sơ giảng viên
-              </h4>
-              {userOverview?.instructorsByVerificationStatus && (
-                (() => {
-                  const totalIns = Object.values(userOverview.instructorsByVerificationStatus).reduce((a, b) => a + b, 0)
-                  return Object.entries(userOverview.instructorsByVerificationStatus).map(([status, count]) => {
-                    const pct = totalIns ? Math.round((count / totalIns) * 100) : 0
-                    let label = status
-                    let colorClass = "bg-primary"
-                    if (status === "VERIFIED") {
-                      label = "Đã phê duyệt (Verified)"
-                      colorClass = "bg-green-500"
-                    } else if (status === "PENDING") {
-                      label = "Chờ phê duyệt (Pending)"
-                      colorClass = "bg-yellow-500"
-                    } else if (status === "REJECTED") {
-                      label = "Đã từ chối (Rejected)"
-                      colorClass = "bg-red-500"
-                    }
-                    return (
-                      <div key={status} className="space-y-1">
-                        <div className="flex justify-between text-xs font-medium">
-                          <span>{label}</span>
-                          <span className="text-muted-foreground">{count} ({pct}%)</span>
-                        </div>
-                        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                          <div className={`h-full ${colorClass}`} style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     )

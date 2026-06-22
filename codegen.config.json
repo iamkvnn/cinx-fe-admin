@@ -85,6 +85,21 @@
       "enumStyle": "union"
     },
     {
+      "name": "notification",
+      "input": "https://api.shiny.id.vn/v3/api-docs/notification",
+      "typesDir": "src/types",
+      "servicesDir": "src/services",
+      "typesFilename": "notificationApi.ts",
+      "serviceFilename": "notificationService.ts",
+      "typesImport": "@/types",
+      "sharedImport": "@/types",
+      "axiosImport": "@/lib/axios",
+      "axiosClientName": "api",
+      "axiosClientImport": "named",
+      "paramsStyle": "object",
+      "enumStyle": "union"
+    },
+    {
       "name": "social",
       "input": "https://api.shiny.id.vn/v3/api-docs/social",
       "typesDir": "src/types",

@@ -35,15 +35,64 @@ export interface UserDto {
   updatedAt?: string;
   lastAccessAt?: string;
   instructorVerifiedAt?: string;
+  isPartnershipTerminated?: boolean;
 }
 
 export interface UpdatePreferredCategoriesRequest {
   categoryIds: string[];
 }
 
+export interface PolicySectionRequest {
+  heading: string;
+  anchor?: string;
+  bodyMarkdown: string;
+  orderIndex: number;
+}
+
+export interface UpdatePolicyRequest {
+  policyType?: "PRIVACY" | "TERMS" | "REFUND" | "COOKIE" | "GENERAL";
+  title: string;
+  summary?: string;
+  effectiveAt?: string;
+  displayOrder?: number;
+  sections: PolicySectionRequest[];
+}
+
+export interface PolicyDetailResponse {
+  id?: string;
+  policyType?: "PRIVACY" | "TERMS" | "REFUND" | "COOKIE" | "GENERAL";
+  slug?: string;
+  title?: string;
+  summary?: string;
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  versionNumber?: number;
+  effectiveAt?: string;
+  publishedAt?: string;
+  displayOrder?: number;
+  sections?: PolicySectionResponse[];
+}
+
+export interface PolicySectionResponse {
+  id?: string;
+  heading?: string;
+  anchor?: string;
+  bodyMarkdown?: string;
+  orderIndex?: number;
+}
+
 export interface DeviceTokenRequest {
   fcmToken: string;
   deviceInfo?: string;
+}
+
+export interface CreatePolicyRequest {
+  policyType: "PRIVACY" | "TERMS" | "REFUND" | "COOKIE" | "GENERAL";
+  slug: string;
+  title: string;
+  summary?: string;
+  effectiveAt?: string;
+  displayOrder?: number;
+  sections: PolicySectionRequest[];
 }
 
 export interface PresignedUrlResponse {
@@ -57,4 +106,17 @@ export interface UserStatisticsOverviewResponse {
   instructorsByVerificationStatus?: Record<string, number>;
   newUsersByTime?: StatisticsByTimeResponse[];
   currentTotalUsers?: number;
+}
+
+export interface PolicySummaryResponse {
+  id?: string;
+  policyType?: "PRIVACY" | "TERMS" | "REFUND" | "COOKIE" | "GENERAL";
+  slug?: string;
+  title?: string;
+  summary?: string;
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  versionNumber?: number;
+  effectiveAt?: string;
+  publishedAt?: string;
+  displayOrder?: number;
 }

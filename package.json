@@ -16,6 +16,7 @@
     "@fontsource-variable/noto-sans": "^5.2.10",
     "@hookform/resolvers": "^5.2.2",
     "@iamkvnn/swagger-ts-codegen": "^1.0.1",
+    "@stomp/stompjs": "^7.3.0",
     "@tanstack/react-query": "^5.100.10",
     "axios": "^1.16.1",
     "class-variance-authority": "^0.7.1",
