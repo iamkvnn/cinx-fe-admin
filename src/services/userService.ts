@@ -16,6 +16,7 @@ import type {
   PolicyDetailResponse,
   PolicySummaryResponse,
   PresignedUrlResponse,
+  TerminatePartnershipRequest,
   UpdatePolicyRequest,
   UpdatePreferredCategoriesRequest,
   UpdateProfileRequest,
@@ -53,8 +54,8 @@ export const UserService = {
   },
 
   /** Terminate partnership with instructor (admin) */
-  async terminatePartnership({ id }: { id: string }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
-    const { data } = await api.post(`/api/v1/users/${id}/terminate-partnership`, undefined, config);
+  async terminatePartnership({ id, body }: { id: string; body: TerminatePartnershipRequest }, config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
+    const { data } = await api.post(`/api/v1/users/${id}/terminate-partnership`, body, config);
     return data;
   },
 

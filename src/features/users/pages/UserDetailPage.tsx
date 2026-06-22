@@ -8,13 +8,33 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
-import { UserService, AdminEnrollmentService, AdminLearningService, OrderService } from "@/services"
+import { UserService, AdminEnrollmentService, AdminLearningService, OrderService, AuthService } from "@/services"
 import { Skeleton } from "@/components/ui/skeleton"
 import * as React from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BanUserDialog } from "../components/BanUserDialog"
 
 export function UserDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [isBanDialogOpen, setIsBanDialogOpen] = React.useState(false)
+  const [isUnbanConfirmOpen, setIsUnbanConfirmOpen] = React.useState(false)
+
+  const unbanMutation = useMutation({
+    mutationFn: () => AuthService.unbanUser({ userId: id as string }),
+    onSuccess: () => {
+      toast.success("Mở khóa tài khoản thành công")
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["user-detail", id] })
+      setIsUnbanConfirmOpen(false)
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Đã xảy ra lỗi khi mở khóa tài khoản")
+    },
+  })
 
   // 1. Fetch User Profile
   const { data: userData, isLoading: isLoadingUser } = useQuery({
@@ -230,9 +250,29 @@ export function UserDetailPage() {
             </div>
           </div>
         </div>
-        <div className="text-right text-sm text-muted-foreground">
+        <div className="flex flex-col sm:items-end gap-2 text-right text-sm text-muted-foreground">
           <p>Tham gia: <span className="font-medium text-foreground">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : "N/A"}</span></p>
           <p>Lần cuối truy cập: <span className="font-medium text-foreground">{formatDate(user.lastAccessAt)}</span></p>
+          <div className="mt-1 flex gap-2">
+            {user.status === 'BANNED' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                onClick={() => setIsUnbanConfirmOpen(true)}
+              >
+                Mở khóa tài khoản
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsBanDialogOpen(true)}
+              >
+                Khóa tài khoản
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -418,6 +458,37 @@ export function UserDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <BanUserDialog
+        isOpen={isBanDialogOpen}
+        onOpenChange={setIsBanDialogOpen}
+        userId={id as string}
+        userName={user.name || ""}
+        userRole="USER"
+      />
+
+      <Dialog open={isUnbanConfirmOpen} onOpenChange={setIsUnbanConfirmOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Mở khóa tài khoản</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn mở khóa cho tài khoản của <span className="font-semibold text-foreground">{user.name}</span>? Người dùng này sẽ khôi phục quyền truy cập vào hệ thống.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsUnbanConfirmOpen(false)} disabled={unbanMutation.isPending}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => unbanMutation.mutate()}
+              disabled={unbanMutation.isPending}
+            >
+              {unbanMutation.isPending ? "Đang xử lý..." : "Mở khóa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, BookOpen, Users, Star, DollarSign, TrendingUp } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -9,13 +9,53 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
-import { UserService, AdminInstructorService, StatisticsService, AdminCourseService } from "@/services"
+import { UserService, AdminInstructorService, StatisticsService, AdminCourseService, AuthService } from "@/services"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatusBadge, getCourseDisplayStatus } from "@/features/courses/components/StatusBadge"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { ShieldAlert } from "lucide-react"
+import { TerminatePartnershipDialog } from "../components/TerminatePartnershipDialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BanUserDialog } from "@/features/users/components/BanUserDialog"
+import { toast } from "sonner"
+
+const translateReasonType = (type?: string) => {
+  switch (type) {
+    case "POLICY_VIOLATION":
+      return "Vi phạm điều khoản chính sách"
+    case "FRAUD_OR_MISCONDUCT":
+      return "Gian lận hoặc hành vi sai trái"
+    case "COPYRIGHT_VIOLATION":
+      return "Vi phạm bản quyền"
+    case "INACTIVE_INSTRUCTOR":
+      return "Giảng viên ngừng hoạt động"
+    case "OTHER":
+      return "Lý do khác"
+    default:
+      return type || "Không xác định"
+  }
+}
 
 export function InstructorDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [isTerminateDialogOpen, setIsTerminateDialogOpen] = React.useState(false)
+  const [isBanDialogOpen, setIsBanDialogOpen] = React.useState(false)
+  const [isUnbanConfirmOpen, setIsUnbanConfirmOpen] = React.useState(false)
+
+  const unbanMutation = useMutation({
+    mutationFn: () => AuthService.unbanUser({ userId: id as string }),
+    onSuccess: () => {
+      toast.success("Mở khóa tài khoản thành công")
+      queryClient.invalidateQueries({ queryKey: ["instructors"] })
+      queryClient.invalidateQueries({ queryKey: ["instructor-detail", id] })
+      setIsUnbanConfirmOpen(false)
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Đã xảy ra lỗi khi mở khóa tài khoản")
+    },
+  })
 
   // 1. Fetch Instructor Profile Info
   const { data: instructorData, isLoading: isLoadingInstructor } = useQuery({
@@ -194,10 +234,20 @@ export function InstructorDetailPage() {
             <div>
               <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
                 {instructor.name}
-                <Badge variant={instructor.status === 'ACTIVE' ? 'default' : 'secondary'}
-                  className={instructor.status === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600 text-[10px] h-5' : 'text-[10px] h-5'}>
-                  {instructor.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}
-                </Badge>
+                {instructor.isPartnershipTerminated ? (
+                  <Badge variant="destructive" className="bg-red-500 hover:bg-red-600 text-[10px] h-5">
+                    Đã chấm dứt hợp tác
+                  </Badge>
+                ) : instructor.status === 'BANNED' ? (
+                  <Badge variant="destructive" className="bg-red-500 hover:bg-red-600 text-[10px] h-5">
+                    Đã khóa
+                  </Badge>
+                ) : (
+                  <Badge variant={instructor.status === 'ACTIVE' ? 'default' : 'secondary'}
+                    className={instructor.status === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600 text-[10px] h-5' : 'text-[10px] h-5'}>
+                    {instructor.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}
+                  </Badge>
+                )}
               </h2>
               <div className="text-sm text-muted-foreground mt-0.5">
                 {instructor.email} {instructor.phoneNumber ? `• ${instructor.phoneNumber}` : ""}
@@ -205,10 +255,70 @@ export function InstructorDetailPage() {
             </div>
           </div>
         </div>
-        <div className="text-right text-sm text-muted-foreground hidden sm:block">
-          <p>Hợp tác từ: <span className="font-medium text-foreground">{instructor.createdAt ? new Date(instructor.createdAt).toLocaleDateString('vi-VN') : "N/A"}</span></p>
+        <div className="flex flex-col sm:items-end gap-2">
+          <div className="text-right text-sm text-muted-foreground hidden sm:block">
+            <p>Hợp tác từ: <span className="font-medium text-foreground">{instructor.createdAt ? new Date(instructor.createdAt).toLocaleDateString('vi-VN') : "N/A"}</span></p>
+          </div>
+          <div className="flex gap-2 flex-wrap justify-end">
+            {instructor.status === 'BANNED' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                onClick={() => setIsUnbanConfirmOpen(true)}
+              >
+                Mở khóa tài khoản
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsBanDialogOpen(true)}
+              >
+                Khóa tài khoản
+              </Button>
+            )}
+            {instructor.isInstructorVerified && !instructor.isPartnershipTerminated && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsTerminateDialogOpen(true)}
+              >
+                Chấm dứt hợp tác
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Alert Banner for Terminated Partnership */}
+      {instructor.isPartnershipTerminated && (
+        <Alert variant="destructive" className="bg-red-50/10 border-red-500/30 text-red-600 dark:text-red-400">
+          <ShieldAlert className="h-5 w-5" />
+          <AlertTitle className="font-semibold">Hợp tác đã bị chấm dứt</AlertTitle>
+          <AlertDescription className="mt-1 space-y-1">
+            <p>
+              Hợp tác với giảng viên này đã bị chấm dứt vào lúc{" "}
+              <span className="font-medium text-foreground">
+                {instructor.partnershipTerminatedAt
+                  ? new Date(instructor.partnershipTerminatedAt).toLocaleString("vi-VN")
+                  : "N/A"}
+              </span>
+              .
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">Lý do chính:</span>{" "}
+              {translateReasonType(instructor.partnershipTerminationReasonType)}
+            </p>
+            {instructor.partnershipTerminationReasonDetail && (
+              <p>
+                <span className="font-semibold text-foreground">Chi tiết lý do:</span>{" "}
+                {instructor.partnershipTerminationReasonDetail}
+              </p>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Bio Card */}
       {instructor.bio && (
@@ -424,6 +534,44 @@ export function InstructorDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <TerminatePartnershipDialog
+        isOpen={isTerminateDialogOpen}
+        onOpenChange={setIsTerminateDialogOpen}
+        instructorId={id as string}
+        instructorName={instructor.name || ""}
+      />
+
+      <BanUserDialog
+        isOpen={isBanDialogOpen}
+        onOpenChange={setIsBanDialogOpen}
+        userId={id as string}
+        userName={instructor.name || ""}
+        userRole="INSTRUCTOR"
+      />
+
+      <Dialog open={isUnbanConfirmOpen} onOpenChange={setIsUnbanConfirmOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Mở khóa tài khoản</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn mở khóa cho tài khoản giảng viên <span className="font-semibold text-foreground">{instructor.name}</span>? Giảng viên này sẽ khôi phục quyền truy cập vào hệ thống.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsUnbanConfirmOpen(false)} disabled={unbanMutation.isPending}>
+              Hủy
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => unbanMutation.mutate()}
+              disabled={unbanMutation.isPending}
+            >
+              {unbanMutation.isPending ? "Đang xử lý..." : "Mở khóa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
