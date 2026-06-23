@@ -208,6 +208,7 @@ export function DashboardFilters({
                     max={calculatedMaxEndDate}
                     onChange={handleEndDateChange}
                     className="w-[140px]"
+                    align="right"
                   />
                 </div>
               )}

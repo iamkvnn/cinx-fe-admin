@@ -8,9 +8,10 @@ interface DatePickerProps {
   min?: string // YYYY-MM-DD
   max?: string // YYYY-MM-DD
   className?: string
+  align?: "left" | "right"
 }
 
-export function DatePicker({ value, onChange, min, max, className }: DatePickerProps) {
+export function DatePicker({ value, onChange, min, max, className, align = "left" }: DatePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
@@ -181,7 +182,10 @@ export function DatePicker({ value, onChange, min, max, className }: DatePickerP
 
       {/* Calendar Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-[280px] bg-popover text-popover-foreground rounded-2xl border border-border shadow-xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className={cn(
+          "absolute mt-2 w-[280px] bg-popover text-popover-foreground rounded-2xl border border-border shadow-xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150",
+          align === "right" ? "right-0" : "left-0"
+        )}>
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <button
