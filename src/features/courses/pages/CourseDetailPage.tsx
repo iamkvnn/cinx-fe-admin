@@ -49,6 +49,15 @@ export function CourseDetailPage() {
     retry: false
   })
 
+  const draftCourse = draftCourseQuery.data?.data
+
+  // Determine if draft fetching is completed and if we need to fetch the published course
+  const isDraftLoaded = !draftCourseQuery.isLoading
+  const isDraftError = draftCourseQuery.isError
+  const hasNoDraft = isDraftLoaded && (isDraftError || !draftCourse)
+  const isDraftNotDraftStatus = !!draftCourse && draftCourse.status !== 'DRAFT'
+  const shouldFetchPublished = !!id && isDraftLoaded && (hasNoDraft || isDraftNotDraftStatus)
+
   // 2. PUBLISHED COURSE INFO (Old)
   const publishedCourseQuery = useQuery({
     queryKey: ['course-published', id],
@@ -60,12 +69,14 @@ export function CourseDetailPage() {
         throw e
       }
     },
-    enabled: !!id,
+    enabled: shouldFetchPublished,
     retry: false
   })
 
-  const draftCourse = draftCourseQuery.data?.data
   const publishedCourse = publishedCourseQuery.data?.data || null
+
+  const isDraftCurriculumEnabled = !!id && !!draftCourse && (draftCourse.status === 'DRAFT' || draftCourse.publishStatus === 'WAITING_APPROVAL')
+  const isPublishedCurriculumEnabled = !!id && !!publishedCourse
 
   // 3. DRAFT CURRICULUM
   const draftCurriculumQuery = useQuery({
@@ -78,7 +89,7 @@ export function CourseDetailPage() {
         throw e
       }
     },
-    enabled: !!id && !!draftCourse && draftCourse.publishStatus === 'WAITING_APPROVAL'
+    enabled: isDraftCurriculumEnabled
   })
 
   // 4. PUBLISHED CURRICULUM
@@ -92,7 +103,7 @@ export function CourseDetailPage() {
         throw e
       }
     },
-    enabled: !!id && !!publishedCourse,
+    enabled: isPublishedCurriculumEnabled,
     retry: false
   })
 
@@ -116,8 +127,8 @@ export function CourseDetailPage() {
   const isLoading =
     draftCourseQuery.isLoading ||
     publishedCourseQuery.isLoading ||
-    (!!draftCourse && draftCourse.publishStatus === 'WAITING_APPROVAL' && draftCurriculumQuery.isLoading) ||
-    (!!publishedCourse && publishedCurriculumQuery.isLoading)
+    (isDraftCurriculumEnabled && draftCurriculumQuery.isLoading) ||
+    (isPublishedCurriculumEnabled && publishedCurriculumQuery.isLoading)
 
   if (isLoading) return <div className="p-8 text-center">Đang tải...</div>
 
@@ -130,6 +141,7 @@ export function CourseDetailPage() {
 
   const draftCurriculum = draftCurriculumQuery.data?.data?.sections || []
   const publishedCurriculum = (publishedCurriculumQuery.data as any)?.data?.sections || []
+  const currentCurriculum = course === draftCourse ? draftCurriculum : publishedCurriculum
 
   // Derived state to know if this is an update vs new
   // If the status is WAITING_APPROVAL and we DO have a published version -> it's an Update!
@@ -677,12 +689,12 @@ export function CourseDetailPage() {
               </div>
             ) : (
               // When diff is toggled OFF, show the NEW info normally
-              renderCourseInfo(course, draftCurriculum)
+              renderCourseInfo(course, currentCurriculum)
             )}
           </TabsContent>
         </Tabs>
       ) : (
-        renderCourseInfo(course, draftCurriculum)
+        renderCourseInfo(course, currentCurriculum)
       )}
     </div>
   )
