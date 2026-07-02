@@ -60,6 +60,7 @@ export interface GradeEssayRequest {
 
 export interface QuizSessionResponse {
   id?: string;
+  userId?: string;
   quizLessonId?: string;
   startTime?: string;
   endTime?: string;

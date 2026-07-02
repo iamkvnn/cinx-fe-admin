@@ -168,6 +168,11 @@ export interface InstructorRevenueResponse {
   courseRevenues?: CourseRevenueResponse[];
 }
 
+export interface EnrolledCourseResponse {
+  course?: CourseResponse;
+  enrolledAt?: string;
+}
+
 export interface UserEnrollmentSummaryResponse {
   enrolledCourseCount?: number;
   totalSpent?: number;

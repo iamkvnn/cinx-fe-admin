@@ -82,6 +82,11 @@ export const UserService = {
     const { data } = await api.get('/api/v1/users/me', config);
     return data;
   },
+
+  async getUsersByIds({ ids }: { ids: string }, config?: AxiosRequestConfig): Promise<ApiResponse<UserDto[]>> {
+    const { data } = await api.get('/api/v1/users/ids', { params: { ids }, ...config });
+    return data;
+  },
 };
 
 // ── PolicyService ──────────────────────────────────────────────

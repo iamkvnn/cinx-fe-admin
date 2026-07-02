@@ -13,11 +13,11 @@ import type {
 import type {
   AdminOverviewResponse,
   CheckEnrollmentStatus,
-  CourseResponse,
   CourseStatisticsResponse,
   CreateOrderRequest,
   CreateVoucherRequest,
   DashboardMetricsResponse,
+  EnrolledCourseResponse,
   InstructorRevenueResponse,
   InstructorStatisticsResponse,
   OrderDetailResponse,
@@ -106,7 +106,7 @@ export const EnrollmentService = {
     return data;
   },
 
-  async getEnrolledCourses({ page, size }: { page?: number; size?: number }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<CourseResponse>> {
+  async getEnrolledCourses({ page, size }: { page?: number; size?: number }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<EnrolledCourseResponse>> {
     const { data } = await api.get('/api/v1/enrollments', { params: { page, size }, ...config });
     return data;
   },

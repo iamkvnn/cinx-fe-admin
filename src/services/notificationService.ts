@@ -35,6 +35,16 @@ export const NotificationService = {
     return data;
   },
 
+  async markAllAsUnread(config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
+    const { data } = await api.post('/api/v1/notifications/mark-all-unread', undefined, config);
+    return data;
+  },
+
+  async markAllAsRead(config?: AxiosRequestConfig): Promise<ApiResponse<Record<string, unknown>>> {
+    const { data } = await api.post('/api/v1/notifications/mark-all-read', undefined, config);
+    return data;
+  },
+
   async getNotifications({ page, size, query, sort }: { page?: number; size?: number; query?: string; sort?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<UserNotificationResponse>> {
     const { data } = await api.get('/api/v1/notifications', { params: { page, size, query, sort }, ...config });
     return data;

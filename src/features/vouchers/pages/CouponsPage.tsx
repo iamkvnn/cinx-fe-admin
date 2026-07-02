@@ -19,7 +19,10 @@ const formatDate = (d: string | undefined) =>
 
 const BASE_COLUMNS: Column<VoucherResponse>[] = [
   { key: "code", title: "Mã Code", sortable: true, render: (v) => <span className="font-mono font-medium">{v.code}</span> },
-  { key: "discountAmount", title: "Mức giảm", render: (v) => formatPrice(v.discountAmount as any) },
+  { key: "description", title: "Mô tả", render: (v) => <span className="text-muted-foreground">{v.description || "-"}</span> },
+  { key: "discountAmount", title: "Mức giảm", render: (v) => <span>{v.discountAmount}%</span> },
+  { key: "minPurchaseAmount", title: "Đơn tối thiểu", render: (v) => formatPrice(v.minPurchaseAmount as any) },
+  { key: "maxDiscountAmount", title: "Giảm tối đa", render: (v) => formatPrice(v.maxDiscountAmount as any) },
   { key: "quantity", title: "Số lượng", hideable: true, render: (v) => <span>{v.quantity ?? "∞"}</span> },
   { key: "validFrom", title: "Từ ngày", hideable: true, render: (v) => formatDate(v.validFrom as any) },
   { key: "validTo", title: "Đến ngày", render: (v) => formatDate(v.validTo as any) },
@@ -37,6 +40,9 @@ export function CouponsPage() {
   // Form state for add
   const [code, setCode] = React.useState("")
   const [discountAmount, setDiscountAmount] = React.useState("")
+  const [minPurchaseAmount, setMinPurchaseAmount] = React.useState("")
+  const [maxDiscountAmount, setMaxDiscountAmount] = React.useState("")
+  const [description, setDescription] = React.useState("")
   const [validFrom, setValidFrom] = React.useState("")
   const [validTo, setValidTo] = React.useState("")
   const [quantity, setQuantity] = React.useState("")
@@ -61,7 +67,14 @@ export function CouponsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vouchers"] })
       setIsAddOpen(false)
-      setCode(""); setDiscountAmount(""); setValidFrom(""); setValidTo(""); setQuantity("")
+      setCode("")
+      setDiscountAmount("")
+      setMinPurchaseAmount("")
+      setMaxDiscountAmount("")
+      setDescription("")
+      setValidFrom("")
+      setValidTo("")
+      setQuantity("")
     },
   })
 
@@ -89,7 +102,7 @@ export function CouponsPage() {
 
 
   const columns: Column<VoucherResponse>[] = [
-    ...BASE_COLUMNS.slice(0, 5),
+    ...BASE_COLUMNS.slice(0, -1),
     {
       key: "actions",
       title: "Hành động",
@@ -113,26 +126,57 @@ export function CouponsPage() {
         <h2 className="text-2xl font-bold tracking-tight">Quản lý Mã giảm giá</h2>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger render={<Button><Plus className="mr-2 h-4 w-4" /> Thêm mã mới</Button>} />
-          <DialogContent>
-            <form onSubmit={(e) => { e.preventDefault(); addMutation.mutate({ code, discountAmount: Number(discountAmount), minPurchaseAmount: 0, maxDiscountAmount: Number(discountAmount), quantity: Number(quantity) || 100, validFrom: validFrom ? new Date(validFrom).toISOString() : undefined, validTo: validTo ? new Date(validTo).toISOString() : undefined }) }}>
+          <DialogContent className="sm:max-w-[600px]">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addMutation.mutate({
+                code,
+                discountAmount: Number(discountAmount),
+                minPurchaseAmount: Number(minPurchaseAmount) || 0,
+                maxDiscountAmount: Number(maxDiscountAmount) || 0,
+                description: description || undefined,
+                quantity: Number(quantity) || 100,
+                validFrom: validFrom ? new Date(validFrom).toISOString() : undefined,
+                validTo: validTo ? new Date(validTo).toISOString() : undefined
+              })
+            }}>
               <DialogHeader>
                 <DialogTitle>Thêm mã giảm giá</DialogTitle>
                 <DialogDescription>Tạo mã giảm giá mới cho hệ thống.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Mã code</label>
-                  <Input placeholder="VD: SUMMER20" value={code} onChange={e => setCode(e.target.value)} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Mã code</label>
+                    <Input placeholder="VD: SUMMER20" value={code} onChange={e => setCode(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Số lượng</label>
+                    <Input type="number" min={1} placeholder="VD: 100" value={quantity} onChange={e => setQuantity(e.target.value)} required />
+                  </div>
                 </div>
+
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Mức giảm (VND)</label>
-                  <Input type="number" placeholder="VD: 50000" value={discountAmount} onChange={e => setDiscountAmount(e.target.value)} required />
+                  <label className="text-sm font-medium">Mô tả</label>
+                  <Input placeholder="Mô tả chương trình khuyến mãi" value={description} onChange={e => setDescription(e.target.value)} />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Số lượng</label>
-                  <Input type="number" min={1} placeholder="VD: 100" value={quantity} onChange={e => setQuantity(e.target.value)} required />
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Mức giảm (%)</label>
+                    <Input type="number" min={1} max={100} placeholder="VD: 10" value={discountAmount} onChange={e => setDiscountAmount(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Đơn tối thiểu (VND)</label>
+                    <Input type="number" placeholder="VD: 100000" value={minPurchaseAmount} onChange={e => setMinPurchaseAmount(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Giảm tối đa (VND)</label>
+                    <Input type="number" placeholder="VD: 50000" value={maxDiscountAmount} onChange={e => setMaxDiscountAmount(e.target.value)} required />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Hiệu lực từ</label>
                     <DateTimePicker value={validFrom} onChange={setValidFrom} />
@@ -179,40 +223,94 @@ export function CouponsPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
-          <form onSubmit={(e) => { e.preventDefault(); if (editingVoucher?.id) updateMutation.mutate({ id: editingVoucher.id, req: { code: editingVoucher.code, discountAmount: Number(editingVoucher.discountAmount), quantity: Number(editingVoucher.quantity), validFrom: editingVoucher.validFrom ? new Date(editingVoucher.validFrom).toISOString() : undefined, validTo: editingVoucher.validTo ? new Date(editingVoucher.validTo).toISOString() : undefined } }) }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (editingVoucher?.id) {
+              updateMutation.mutate({
+                id: editingVoucher.id,
+                req: {
+                  code: editingVoucher.code,
+                  discountAmount: Number(editingVoucher.discountAmount),
+                  minPurchaseAmount: Number(editingVoucher.minPurchaseAmount) || 0,
+                  maxDiscountAmount: Number(editingVoucher.maxDiscountAmount) || 0,
+                  description: editingVoucher.description || undefined,
+                  quantity: Number(editingVoucher.quantity),
+                  validFrom: editingVoucher.validFrom ? new Date(editingVoucher.validFrom).toISOString() : undefined,
+                  validTo: editingVoucher.validTo ? new Date(editingVoucher.validTo).toISOString() : undefined
+                }
+              })
+            }
+          }}>
             <DialogHeader>
               <DialogTitle>Sửa mã giảm giá</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Mã code</label>
+                  <Input
+                    value={editingVoucher?.code || ""}
+                    onChange={e => setEditingVoucher(prev => prev ? { ...prev, code: e.target.value } : null)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Số lượng</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={editingVoucher?.quantity || ""}
+                    onChange={e => setEditingVoucher(prev => prev ? { ...prev, quantity: Number(e.target.value) } : null)}
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <label className="text-sm font-medium">Mã code</label>
+                <label className="text-sm font-medium">Mô tả</label>
                 <Input
-                  value={editingVoucher?.code || ""}
-                  onChange={e => setEditingVoucher(prev => prev ? { ...prev, code: e.target.value } : null)}
-                  required
+                  placeholder="Mô tả chương trình khuyến mãi"
+                  value={editingVoucher?.description || ""}
+                  onChange={e => setEditingVoucher(prev => prev ? { ...prev, description: e.target.value } : null)}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Mức giảm (VND)</label>
-                <Input
-                  type="number"
-                  value={editingVoucher?.discountAmount || ""}
-                  onChange={e => setEditingVoucher(prev => prev ? { ...prev, discountAmount: Number(e.target.value) } : null)}
-                  required
-                />
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Mức giảm (%)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={editingVoucher?.discountAmount || ""}
+                    onChange={e => setEditingVoucher(prev => prev ? { ...prev, discountAmount: Number(e.target.value) } : null)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Đơn tối thiểu (VND)</label>
+                  <Input
+                    type="number"
+                    placeholder="VD: 100000"
+                    value={editingVoucher?.minPurchaseAmount ?? ""}
+                    onChange={e => setEditingVoucher(prev => prev ? { ...prev, minPurchaseAmount: Number(e.target.value) } : null)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Giảm tối đa (VND)</label>
+                  <Input
+                    type="number"
+                    placeholder="VD: 50000"
+                    value={editingVoucher?.maxDiscountAmount ?? ""}
+                    onChange={e => setEditingVoucher(prev => prev ? { ...prev, maxDiscountAmount: Number(e.target.value) } : null)}
+                    required
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Số lượng</label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={editingVoucher?.quantity || ""}
-                  onChange={e => setEditingVoucher(prev => prev ? { ...prev, quantity: Number(e.target.value) } : null)}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Hiệu lực từ</label>
                   <DateTimePicker
