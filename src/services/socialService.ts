@@ -12,6 +12,7 @@ import type {
 } from '@/types';
 import type {
   AddToWishlistRequest,
+  AdminReportResponse,
   AnswerDto,
   CourseQnAStatisticsResponse,
   CreateAnswerRequest,
@@ -22,7 +23,6 @@ import type {
   CreateReviewReplyRequest,
   CreateReviewRequest,
   QuestionDto,
-  Report,
   ReportStatisticsOverviewResponse,
   ReviewResponse,
   ReviewStatisticsResponse,
@@ -205,7 +205,7 @@ export const SocialStatisticsService = {
 // ── AdminReportService ──────────────────────────────────────────────
 export const AdminReportService = {
 
-  async getReports({ type, page, size, sort }: { type?: string; page?: number; size?: number; sort?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<Report>> {
+  async getReports({ type, page, size, sort }: { type?: string; page?: number; size?: number; sort?: string }, config?: AxiosRequestConfig): Promise<PaginatedApiResponse<AdminReportResponse>> {
     const { data } = await api.get('/api/v1/reports', { params: { type, page, size, sort }, ...config });
     return data;
   },

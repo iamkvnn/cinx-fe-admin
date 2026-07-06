@@ -12,13 +12,13 @@ import { KPICards } from "../components/KPICards"
 import { FinancialsTab } from "../components/FinancialsTab"
 import { CoursesTab } from "../components/CoursesTab"
 import { UsersTab } from "../components/UsersTab"
-import { 
-  formatDateObj, formatMonthObj, addDays, addMonths, 
-  getMonthDifference, getLastDayOfMonth 
+import {
+  formatDateObj, formatMonthObj, addDays, addMonths,
+  getMonthDifference, getLastDayOfMonth
 } from "@/lib/utils"
 
 export function DashboardPage() {
-  const [timeGroup, setTimeGroup] = React.useState<"MONTH" | "DAY">("MONTH")
+  const [timeGroup, setTimeGroup] = React.useState<"MONTH" | "DAY">("DAY")
   const [monthRangeType, setMonthRangeType] = React.useState<"3_MONTHS" | "6_MONTHS" | "12_MONTHS" | "CUSTOM">("6_MONTHS")
   const [dayRangeType, setDayRangeType] = React.useState<"7_DAYS" | "14_DAYS" | "30_DAYS" | "CUSTOM">("30_DAYS")
 
@@ -121,7 +121,7 @@ export function DashboardPage() {
   const handleStartMonthChange = (val: string | null) => {
     if (!val) return
     setStartMonthStr(val)
-    
+
     let newEnd = endMonthStr
     const diff = getMonthDifference(val, endMonthStr)
     if (diff > 11 || diff < 0) {
@@ -136,7 +136,7 @@ export function DashboardPage() {
   const handleEndMonthChange = (val: string | null) => {
     if (!val) return
     setEndMonthStr(val)
-    
+
     let newStart = startMonthStr
     const diff = getMonthDifference(startMonthStr, val)
     if (diff > 11 || diff < 0) {
@@ -151,14 +151,14 @@ export function DashboardPage() {
   const handleStartDateChange = (val: string) => {
     if (!val) return
     setStartDateStr(val)
-    
+
     const [sYear, sMonth, sDay] = val.split("-").map(Number)
     const [eYear, eMonth, eDay] = endDateStr.split("-").map(Number)
     const s = new Date(sYear, sMonth - 1, sDay)
     const e = new Date(eYear, eMonth - 1, eDay)
     const diffTime = e.getTime() - s.getTime()
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
-    
+
     let newEnd = endDateStr
     if (diffDays > 29 || diffDays < 0) {
       newEnd = addDays(val, 29)
@@ -172,14 +172,14 @@ export function DashboardPage() {
   const handleEndDateChange = (val: string) => {
     if (!val) return
     setEndDateStr(val)
-    
+
     const [sYear, sMonth, sDay] = startDateStr.split("-").map(Number)
     const [eYear, eMonth, eDay] = val.split("-").map(Number)
     const s = new Date(sYear, sMonth - 1, sDay)
     const e = new Date(eYear, eMonth - 1, eDay)
     const diffTime = e.getTime() - s.getTime()
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
-    
+
     let newStart = startDateStr
     if (diffDays > 29 || diffDays < 0) {
       newStart = addDays(val, -29)
@@ -194,12 +194,12 @@ export function DashboardPage() {
     setTimeGroup(group)
   }
 
-  const queryStartDate = timeGroup === "MONTH" 
-    ? `${startMonthStr}-01` 
+  const queryStartDate = timeGroup === "MONTH"
+    ? `${startMonthStr}-01`
     : startDateStr
 
-  const queryEndDate = timeGroup === "MONTH" 
-    ? getLastDayOfMonth(endMonthStr) 
+  const queryEndDate = timeGroup === "MONTH"
+    ? getLastDayOfMonth(endMonthStr)
     : endDateStr
 
   // 1. Fetch Platform overview

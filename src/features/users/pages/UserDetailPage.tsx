@@ -67,7 +67,7 @@ export function UserDetailPage() {
   // 5. Fetch User Orders (to extract real courses)
   const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
     queryKey: ['user-orders', id],
-    queryFn: () => OrderService.getOrders({ size: 1000 }),
+    queryFn: () => OrderService.getOrdersByUserIdForAdmin({ userId: id as string, size: 1000 }),
     enabled: !!id
   })
 

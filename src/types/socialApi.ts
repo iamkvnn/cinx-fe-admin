@@ -145,17 +145,30 @@ export interface ReviewStatisticsResponse {
   replyRate?: number;
 }
 
-export interface Report {
+export interface AdminReportResponse {
   id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
   reporterId?: string;
-  refId?: string;
+  reporter?: UserSummaryResponse;
   type?: "REVIEW" | "QUESTION" | "ANSWER";
   reason?: string;
+  reportedContent?: ReportedContentResponse;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ReportedContentResponse {
+  id?: string;
+  type?: "REVIEW" | "QUESTION" | "ANSWER";
+  ownerId?: string;
+  owner?: UserSummaryResponse;
+  courseId?: string;
+  lessonId?: string;
+  questionId?: string;
+  title?: string;
+  content?: string;
+  rating?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ReportStatisticsOverviewResponse {
